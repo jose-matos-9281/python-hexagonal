@@ -1,14 +1,25 @@
 [project]
 name = "python-hexagonal"
 version = "0.1.0"
-description = "Add your description here"
+description = "Framework to build hexagonal architecture applications in Python."
 readme = "README.md"
 authors = [
     { name = "jose-matos-9281", email = "58991817+jose-matos-9281@users.noreply.github.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "eventsourcing>=9.4.6",
+    "pydantic>=2.12.5",
+    "uuid6>=2025.0.1",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.16,<0.10.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "hexagonal"
+
+[tool.ruff.lint]
+select = ["I", "E", "F", "B"]
+fixable = ["I", "E", "F", "B"]
