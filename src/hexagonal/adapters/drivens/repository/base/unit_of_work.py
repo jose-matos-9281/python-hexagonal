@@ -43,10 +43,10 @@ class BaseUnitOfWork(IUnitOfWork[TManager], InfrastructureGroup):
         self.verify()
         if self._active:
             return self
+        # get connection from manager, the connection is entered yet
         self._ctx = self._manager.start_connection()
         for repo in self._repositories.values():
             repo.attach_to_unit_of_work(self)
-        self._ctx.__enter__()
         self._active = True
         return self
 
@@ -57,6 +57,9 @@ class BaseUnitOfWork(IUnitOfWork[TManager], InfrastructureGroup):
                 self.commit()
             else:
                 self.rollback()
+        except Exception as e:
+            # Log or handle commit/rollback errors
+            raise RuntimeError(f"Failed to finalize transaction: {e}") from e
         finally:
             for repo in self._repositories.values():
                 repo.detach_from_unit_of_work()

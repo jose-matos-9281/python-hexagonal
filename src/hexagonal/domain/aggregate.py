@@ -33,6 +33,11 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
     class Created(Event, AggregateCreated):
         pass
 
+    class Deleted(Event):
+        def mutate(self, aggregate: Any) -> Any:
+            super().mutate(aggregate)
+            return None
+
     Snapshot = Snapshot
 
     def __init_subclass__(cls) -> None:

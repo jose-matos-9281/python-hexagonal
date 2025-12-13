@@ -134,15 +134,6 @@ class IInboxRepository(IBaseRepository[TManager]):
         """Marcar el mensaje como fallido."""
         ...
 
-    @abstractmethod
-    def load_failed_messages(
-        self,
-        handler: str,
-        limit: int | None = None,
-    ) -> list[CloudMessage[Any]]:
-        """Cargar mensajes que han fallado para reintento."""
-        ...
-
 
 class ISearchRepository(IBaseRepository[TManager], Generic[TManager, TQuery, TView]):
     @abstractmethod
