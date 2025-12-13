@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, ClassVar, Dict, Generic, Optional, Self, Type, TypeVar
+from typing import Any, ClassVar, Dict, Generic, Iterable, Optional, Self, Type, TypeVar
 from uuid import UUID
 
 from eventsourcing.domain import CanCreateTimestamp
@@ -36,26 +36,28 @@ class Inmutable(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
-class Evento(Inmutable): ...
-
-
-class DomainEvent(Evento, HasTopic):
-    originator_id: UUID
-    originator_version: int
-    timestamp: datetime
-
-
-class IntegrationEvent(Evento, HasTopic): ...
-
-
-TValue = TypeVar("TValue")
-
-
 class FactoryMethod(ABC):
     @classmethod
     @abstractmethod
     def new(cls, *_: Any, **__: Any) -> Self:
         raise NotImplementedError
+
+
+class Message(Inmutable, FactoryMethod):
+    id: UUID = Field(default_factory=uuid7)
+    timestamp: datetime = Field(default_factory=CanCreateTimestamp.create_timestamp)
+
+
+class DomainEvent(Message, HasTopic): ...
+
+
+class IntegrationEvent(Message, HasTopic): ...
+
+
+class Command(Message, HasTopic): ...
+
+
+TValue = TypeVar("TValue")
 
 
 class ValueObject(Inmutable, FactoryMethod, Generic[TValue]):
@@ -64,9 +66,6 @@ class ValueObject(Inmutable, FactoryMethod, Generic[TValue]):
     @classmethod
     def new(cls, value: TValue, *_: Any, **__: Any) -> Self:
         return cls(value=value)
-
-
-class Command(Inmutable, FactoryMethod, HasTopic): ...
 
 
 TMessagePayload = IntegrationEvent | Command | DomainEvent
@@ -79,37 +78,46 @@ TMessagePayloadType = TypeVar("TMessagePayloadType", bound=TMessagePayload)
 class CloudMessage(Inmutable, FactoryMethod, Generic[TMessage]):
     type: str
     payload: TMessage
-    message_id: UUID = Field(default_factory=uuid7)
+    message_id: UUID
     correlation_id: Optional[UUID] = None
     causation_id: Optional[UUID] = None
-    occurred_at: datetime = Field(default_factory=CanCreateTimestamp.create_timestamp)
+    occurred_at: datetime
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @classmethod
     def new(
         cls,
         payload: TMessage,
+        *,
         mid: UUID | None = None,
         **kw: Any,
     ) -> "CloudMessage[TMessage]":
-        mid = mid or uuid7()
+        mid = mid or payload.id
         return cls(
             type=payload.TOPIC,
             payload=payload,
+            occurred_at=payload.timestamp,
             message_id=mid,
             correlation_id=mid,
             metadata=kw,
         )
 
     def derive(
-        self, payload: TMessagePayloadType, **kw: Any
+        self,
+        payload: TMessagePayloadType,
+        *,
+        mid: UUID | None = None,
+        **kw: Any,
     ) -> "CloudMessage[TMessagePayloadType]":
+        mid = mid or payload.id
         return CloudMessage(
+            message_id=mid,
             type=payload.TOPIC,
             payload=payload,
             correlation_id=self.correlation_id,
             causation_id=self.message_id,
             metadata=kw,
+            occurred_at=payload.timestamp,
         )
 
 
@@ -159,3 +167,8 @@ class QueryResult(Inmutable, Generic[TView], FactoryMethod):
 
 
 TQuery = TypeVar("TQuery", bound=Query[Any], contravariant=True)
+
+
+class UseCase(ABC):
+    @abstractmethod
+    def execute(self) -> Iterable[TEvento]: ...

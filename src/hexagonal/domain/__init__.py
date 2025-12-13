@@ -8,11 +8,11 @@ from .base import (
     CloudMessage,
     Command,
     DomainEvent,
-    Evento,
     FactoryMethod,
     HasTopic,
     Inmutable,
     IntegrationEvent,
+    Message,
     Query,
     QueryResult,
     QueryResults,
@@ -24,6 +24,7 @@ from .base import (
     TMessagePayloadType,
     TQuery,
     TView,
+    UseCase,
     ValueObject,
 )
 
@@ -35,7 +36,7 @@ __all__ = [
     "CloudMessage",
     "Command",
     "DomainEvent",
-    "Evento",
+    "Message",
     "FactoryMethod",
     "HasTopic",
     "IntegrationEvent",
@@ -52,4 +53,5 @@ __all__ = [
     "QueryResult",
     "QueryResults",
     "TQuery",
+    "UseCase",
 ]

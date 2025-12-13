@@ -1,19 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Iterable
+from typing import Generic
 
-from hexagonal.domain.base import (
+from hexagonal.domain import (
     CloudMessage,
     QueryResults,
-    TEvento,
     TMessagePayloadType,
     TQuery,
     TView,
+    UseCase,
 )
 
-
-class UseCase(ABC):
-    @abstractmethod
-    def execute(self) -> Iterable[TEvento]: ...
+from .repository import ISearchRepository, TManager
 
 
 class MessageHandler(ABC, Generic[TMessagePayloadType]):
@@ -24,6 +21,10 @@ class MessageHandler(ABC, Generic[TMessagePayloadType]):
     def get_use_case(self, message: TMessagePayloadType) -> UseCase: ...
 
 
-class QueryHandler(ABC, Generic[TQuery, TView]):
+class QueryHandler(ABC, Generic[TManager, TQuery, TView]):
+    @property
+    @abstractmethod
+    def repository(self) -> ISearchRepository[TManager, TQuery, TView]: ...
+
     @abstractmethod
     def get(self, query: TQuery) -> QueryResults[TView]: ...
