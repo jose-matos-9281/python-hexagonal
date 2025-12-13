@@ -1,5 +1,5 @@
-from .app import AplicationProxyAdapter
+from .app import ApplicationProxyAdapter
 
 __all__ = [
-    "AplicationProxyAdapter",
+    "ApplicationProxyAdapter",
 ]

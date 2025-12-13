@@ -26,6 +26,16 @@ from .base import (
     TView,
     ValueObject,
 )
+from .exceptions import (
+    AggregateNotFound,
+    AggregateVersionMismatch,
+    DomainException,
+    DomainValueError,
+    HandlerAlreadyRegistered,
+    HandlerNotFound,
+    HandlerNotRegistered,
+    InfrastructureNotInitialized,
+)
 
 __all__ = [
     "AggregateRoot",
@@ -52,4 +62,12 @@ __all__ = [
     "QueryResult",
     "QueryResults",
     "TQuery",
+    "DomainException",
+    "DomainValueError",
+    "AggregateNotFound",
+    "AggregateVersionMismatch",
+    "HandlerAlreadyRegistered",
+    "HandlerNotFound",
+    "InfrastructureNotInitialized",
+    "HandlerNotRegistered",
 ]

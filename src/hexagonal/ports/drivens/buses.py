@@ -3,7 +3,6 @@ from typing import Callable, Generic, Literal, Type, overload
 
 from hexagonal.domain import (
     CloudMessage,
-    Command,
     Query,
     QueryResult,
     QueryResults,
@@ -41,7 +40,7 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
 class ICommandBus(IBaseMessageBus[TManager], ABC):
     @abstractmethod
     def register_handler(
-        self, command_type: Type[TCommand], handler_type: IMessageHandler[TCommand]
+        self, command_type: Type[TCommand], handler: IMessageHandler[TCommand]
     ) -> None:
         """Registrar un manejador para un tipo de comando."""
         ...
@@ -54,7 +53,7 @@ class ICommandBus(IBaseMessageBus[TManager], ABC):
     @abstractmethod
     def dispatch(
         self,
-        command: Command | CloudMessage[TCommand],
+        command: TCommand | CloudMessage[TCommand],
         *,
         to_outbox: bool = False,
     ) -> None:
@@ -84,6 +83,9 @@ class IEventBus(IBaseMessageBus[TManager], ABC):
     def publish(self, *events: CloudMessage[TEvent]) -> None:
         """Publicar un evento a todos sus suscriptores."""
         ...
+
+    @abstractmethod
+    def process_events(self, *events: CloudMessage[TEvent]) -> None: ...
 
     #  wait for
     @overload
