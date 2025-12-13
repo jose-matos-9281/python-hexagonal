@@ -1,8 +1,13 @@
 # mypy: disable-error-code="misc"
 from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar
 
-from hexagonal.domain import CloudMessage, TCommand, TEvent, TEvento
+from uuid6 import UUID
+
+from hexagonal.domain import CloudMessage, Query, TCommand, TEvent, TEvento
+from hexagonal.ports.drivens import TAggregate
 from hexagonal.ports.drivers import IBaseApplication
+
+from .query import AggregateView
 
 TBaseApp = TypeVar("TBaseApp", bound=IBaseApplication[Any])
 
@@ -55,3 +60,12 @@ class BaseAPI(Generic[TBaseApp]):
         return cloud_message, {
             event: wrapper.event for event, wrapper in awaited.items()
         }
+
+    def _get_aggregate(
+        self,
+        id: UUID,
+        query_type: Type[Query[AggregateView[TAggregate]]],
+        **kwargs: Any,
+    ) -> TAggregate:
+        query = query_type.new(id, **kwargs)
+        return self.app.query_bus.get(query, one=True).item.value
