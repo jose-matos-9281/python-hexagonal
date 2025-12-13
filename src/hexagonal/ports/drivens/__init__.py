@@ -1,4 +1,4 @@
-from .application import MessageHandler, QueryHandler
+from .application import IMessageHandler, IQueryHandler, IUseCase
 from .buses import (
     IBaseMessageBus,
     IBusInfrastructure,
@@ -15,6 +15,7 @@ from .repository import (
     IOutboxRepository,
     ISearchRepository,
     IUnitOfWork,
+    TAggregate,
     TManager,
 )
 
@@ -32,7 +33,9 @@ __all__ = [
     "ISearchRepository",
     "IConnectionManager",
     "IUnitOfWork",
-    "MessageHandler",
-    "QueryHandler",
+    "IMessageHandler",
+    "IQueryHandler",
     "TManager",
+    "IUseCase",
+    "TAggregate",
 ]

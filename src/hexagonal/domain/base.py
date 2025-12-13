@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, ClassVar, Dict, Generic, Iterable, Optional, Self, Type, TypeVar
+from typing import Any, ClassVar, Dict, Generic, Optional, Self, Type, TypeVar
 from uuid import UUID
 
 from eventsourcing.domain import CanCreateTimestamp
@@ -167,8 +167,3 @@ class QueryResult(Inmutable, Generic[TView], FactoryMethod):
 
 
 TQuery = TypeVar("TQuery", bound=Query[Any], contravariant=True)
-
-
-class UseCase(ABC):
-    @abstractmethod
-    def execute(self) -> Iterable[TEvento]: ...

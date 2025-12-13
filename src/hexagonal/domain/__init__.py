@@ -24,7 +24,6 @@ from .base import (
     TMessagePayloadType,
     TQuery,
     TView,
-    UseCase,
     ValueObject,
 )
 
@@ -53,5 +52,4 @@ __all__ = [
     "QueryResult",
     "QueryResults",
     "TQuery",
-    "UseCase",
 ]

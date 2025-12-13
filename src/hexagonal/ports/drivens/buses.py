@@ -13,7 +13,7 @@ from hexagonal.domain import (
     TView,
 )
 
-from .application import MessageHandler, QueryHandler
+from .application import IMessageHandler, IQueryHandler
 from .infrastructure import IBaseInfrastructure
 from .repository import IInboxRepository, IOutboxRepository, TManager
 
@@ -41,7 +41,7 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
 class ICommandBus(IBaseMessageBus[TManager], ABC):
     @abstractmethod
     def register_handler(
-        self, command_type: Type[TCommand], handler_type: MessageHandler[TCommand]
+        self, command_type: Type[TCommand], handler_type: IMessageHandler[TCommand]
     ) -> None:
         """Registrar un manejador para un tipo de comando."""
         ...
@@ -69,7 +69,7 @@ class ICommandBus(IBaseMessageBus[TManager], ABC):
 
 class IEventBus(IBaseMessageBus[TManager], ABC):
     @abstractmethod
-    def subscribe(self, event_type: Type[TEvent], handler: MessageHandler[TEvent]):
+    def subscribe(self, event_type: Type[TEvent], handler: IMessageHandler[TEvent]):
         """Suscribir un manejador a un tipo de evento."""
         ...
 
@@ -77,7 +77,7 @@ class IEventBus(IBaseMessageBus[TManager], ABC):
     def unsubscribe(
         self,
         event_type: Type[TEvent],
-        *handlers: MessageHandler[TEvent],
+        *handlers: IMessageHandler[TEvent],
     ): ...
 
     @abstractmethod
@@ -106,7 +106,7 @@ class IQueryBus(IBaseInfrastructure, Generic[TManager]):
     def register_handler(
         self,
         query_type: Type[TQuery],
-        handler: QueryHandler[TManager, TQuery, TView],
+        handler: IQueryHandler[TManager, TQuery, TView],
     ): ...
 
     @abstractmethod
