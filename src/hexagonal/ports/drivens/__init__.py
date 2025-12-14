@@ -13,6 +13,7 @@ from .repository import (
     IConnectionManager,
     IInboxRepository,
     IOutboxRepository,
+    IPairInboxOutbox,
     ISearchRepository,
     IUnitOfWork,
     TAggregate,
@@ -38,4 +39,5 @@ __all__ = [
     "TManager",
     "IUseCase",
     "TAggregate",
+    "IPairInboxOutbox",
 ]

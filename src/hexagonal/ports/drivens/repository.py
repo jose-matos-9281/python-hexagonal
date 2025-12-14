@@ -140,3 +140,13 @@ class ISearchRepository(IBaseRepository[TManager], Generic[TManager, TQuery, TVi
     def search(self, query: TQuery) -> List[TView]:
         """Buscar objetos de valor según el query proporcionado."""
         ...
+
+
+class IPairInboxOutbox(IBaseInfrastructure, Generic[TManager]):
+    @property
+    @abstractmethod
+    def inbox(self) -> IInboxRepository[TManager]: ...
+
+    @property
+    @abstractmethod
+    def outbox(self) -> IOutboxRepository[TManager]: ...

@@ -19,6 +19,7 @@ from hexagonal.domain import CloudMessage, TMessagePayload
 from hexagonal.ports.drivens import (
     IInboxRepository,
     IOutboxRepository,
+    IPairInboxOutbox,
 )
 
 from .datastore import SQLiteConnectionContextManager
@@ -369,7 +370,10 @@ class SQLiteInboxRepository(
             )
 
 
-class SqliteInboxOutboxPair(InfrastructureGroup):
+class SQLitePairInboxOutbox(
+    InfrastructureGroup,
+    IPairInboxOutbox[SQLiteConnectionContextManager],
+):
     def __init__(
         self,
         mapper: MessageMapper,

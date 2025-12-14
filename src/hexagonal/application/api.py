@@ -3,23 +3,14 @@ from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar
 
 from uuid6 import UUID
 
-from hexagonal.domain import CloudMessage, Query, TCommand, TEvent, TEvento
+from hexagonal.domain import CloudMessage, Query, TCommand, TEvento
 from hexagonal.ports.drivens import TAggregate
 from hexagonal.ports.drivers import IBaseApplication
 
+from .app import GetEvent
 from .query import AggregateView
 
 TBaseApp = TypeVar("TBaseApp", bound=IBaseApplication[Any])
-
-
-class GetEvent(Generic[TEvent]):
-    event: TEvent | None = None
-
-    def __init__(self):
-        self.event = None
-
-    def __call__(self, event: TEvent):
-        self.event = event
 
 
 class BaseAPI(Generic[TBaseApp]):

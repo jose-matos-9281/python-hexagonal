@@ -40,6 +40,8 @@ class InfrastructureGroup(ComposableInfrastructure):
 
     def initialize(self, env: Mapping[str, str]) -> None:
         for infrastructure in self.infrastructures:
+            if infrastructure.initialized:
+                continue
             infrastructure.initialize(env)
 
     @property
