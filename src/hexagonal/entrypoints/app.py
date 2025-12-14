@@ -44,8 +44,8 @@ class AppEntrypoint(Entrypoint[IBaseApplication[TManager]]):
         if not hasattr(cls, "BUS_INFRASTRUCTURE"):
             cls.setBusInfrastructure(cls.BUS_GROUP.getEntrypoint(env))
 
-        class GeneralBusEntrypoint(cls.BUS_INFRASTRUCTURE):
-            OUTBOX = cls.OUTBOX
+        cls.BUS_INFRASTRUCTURE.setOutbox(cls.OUTBOX)
+        GeneralBusEntrypoint = cls.BUS_INFRASTRUCTURE
 
         bus_app = cls.BUS_APP.get(env)
         bus_infrastructure = GeneralBusEntrypoint.get(env)  # type: ignore

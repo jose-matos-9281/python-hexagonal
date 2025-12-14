@@ -24,8 +24,8 @@ class GetEvent(Generic[TEvent]):
 class Application(IBaseApplication[TManager]):
     def __init__(
         self,
-        bus_infrastructure: IBusInfrastructure[TManager],
         bus_app: IBusApp[TManager],
+        bus_infrastructure: IBusInfrastructure[TManager],
     ):
         bus_infrastructure.verify()
         self._bus_infrastructure = bus_infrastructure
