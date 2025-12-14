@@ -2,7 +2,7 @@ from typing import Any, Literal, Mapping, Type, overload
 
 from eventsourcing.utils import get_topic
 
-from hexagonal.application import Infrastructure, QueryHandler
+from hexagonal.application import Infrastructure
 from hexagonal.domain import (
     HandlerAlreadyRegistered,
     HandlerNotRegistered,
@@ -12,11 +12,11 @@ from hexagonal.domain import (
     TQuery,
     TView,
 )
-from hexagonal.ports.drivens import IQueryBus, TManager
+from hexagonal.ports.drivens import IQueryBus, IQueryHandler, TManager
 
 
 class QueryBus(IQueryBus[TManager], Infrastructure):
-    handlers: dict[str, QueryHandler[TManager, Any, Any]]
+    handlers: dict[str, IQueryHandler[TManager, Any, Any]]
 
     def initialize(self, env: Mapping[str, str]) -> None:
         self.handlers = {}
@@ -27,12 +27,14 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
 
     def _get_handler(
         self, query: Query[TView]
-    ) -> QueryHandler[TManager, Query[TView], TView] | None:
+    ) -> IQueryHandler[TManager, Query[TView], TView] | None:
         name = self._get_name(query.__class__)
         return self.handlers.get(name)
 
-    def register(
-        self, query_type: Type[TQuery], handler: QueryHandler[TManager, TQuery, TView]
+    def register_handler(
+        self,
+        query_type: Type[TQuery],
+        handler: IQueryHandler[TManager, TQuery, TView],
     ):
         self.verify()
         name = self._get_name(query_type)
@@ -40,7 +42,7 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
             raise HandlerAlreadyRegistered(f"Query: {name}")
         self.handlers[name] = handler
 
-    def unregister(self, query_type: Type[TQuery]):
+    def unregister_handler(self, query_type: Type[TQuery]):
         self.verify()
         name = self._get_name(query_type)
         if name in self.handlers:

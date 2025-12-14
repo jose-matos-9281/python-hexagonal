@@ -39,7 +39,7 @@ Error al Manejar Evento {evento.__class__.__name__}
         """)  # type: ignore  # noqa: E501
 
 
-class BaseEventBus(MessageBus[TManager], IEventBus[TManager]):
+class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
     handlers: Dict[str, Dict[str, IMessageHandler[Any]]]
     wait_list: Dict[str, List[Callable[..., None]]]
 

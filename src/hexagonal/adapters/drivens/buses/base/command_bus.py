@@ -2,7 +2,6 @@ from typing import Any, Mapping, Type
 
 from eventsourcing.utils import get_topic
 
-from hexagonal.application import CommandHandler
 from hexagonal.domain import (
     CloudMessage,
     Command,
@@ -10,13 +9,13 @@ from hexagonal.domain import (
     HandlerNotRegistered,
     TCommand,
 )
-from hexagonal.ports.drivens import ICommandBus, TManager
+from hexagonal.ports.drivens import ICommandBus, IMessageHandler, TManager
 
 from .message_bus import MessageBus
 
 
-class BaseCommandBus(MessageBus[TManager], ICommandBus[TManager]):
-    _handlers: dict[str, CommandHandler[Any]]
+class BaseCommandBus(ICommandBus[TManager], MessageBus[TManager]):
+    _handlers: dict[str, IMessageHandler[Any]]
 
     def initialize(self, env: Mapping[str, str]) -> None:
         self.__class__._handlers = {}
@@ -35,14 +34,16 @@ class BaseCommandBus(MessageBus[TManager], ICommandBus[TManager]):
         else:
             raise HandlerNotRegistered(f"Command: {handler}")
 
-    def register(self, command_type: Type[TCommand], handler: CommandHandler[TCommand]):
+    def register_handler(
+        self, command_type: Type[TCommand], handler: IMessageHandler[TCommand]
+    ):
         self.verify()
         name = self._get_name(command_type)
         if name in self._handlers:
             raise HandlerAlreadyRegistered(f"Command: {name}")
         self._handlers[name] = handler
 
-    def unregister(self, command_type: Type[TCommand]):
+    def unregister_handler(self, command_type: Type[TCommand]):
         self.verify()
         name = self._get_name(command_type)
         if name in self._handlers:
