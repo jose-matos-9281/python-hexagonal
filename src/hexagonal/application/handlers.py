@@ -51,7 +51,7 @@ class MessageHandler(IMessageHandler[TMessagePayloadType]):
         return self.event_bus.publish_from_outbox()
 
 
-class EventHandler(IMessageHandler[TEvent]):
+class EventHandler(MessageHandler[TEvent]):
     class UseCaseImpl(IUseCase):
         def __init__(
             self, event_handler: "EventHandler[TEvent]", event: TEvent
@@ -70,7 +70,7 @@ class EventHandler(IMessageHandler[TEvent]):
         return self.UseCaseImpl(self, message)
 
 
-class CommandHandler(IMessageHandler[TCommand]):
+class CommandHandler(MessageHandler[TCommand]):
     def execute(self, command: TCommand) -> Iterable[TEvento]:
         return []
 

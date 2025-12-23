@@ -1,16 +1,19 @@
-from typing import Any, Generic, Self, Type, TypeVar, get_args, get_origin
+from abc import abstractmethod
+from datetime import datetime
+from typing import Any, Generic, List, Self, Type, TypeVar, get_args, get_origin
 from uuid import UUID
 
 from eventsourcing.domain import (
     AggregateCreated,
     AggregateEvent,
     BaseAggregate,
+    CanMutateAggregate,
     Snapshot,
     event,
 )
 from uuid6 import uuid7
 
-from .base import ValueObject
+from .base import Inmutable, ValueObject
 
 command = event
 
@@ -22,6 +25,27 @@ class IdValueObject(ValueObject[UUID]):
 
 
 TIdEntity = TypeVar("TIdEntity", bound=IdValueObject)
+
+
+class AggregateState(Inmutable, Generic[TIdEntity]):
+    id: TIdEntity
+    agg_version: int
+    agg_unsaved_commands: List[CanMutateAggregate[Any]]
+    created_on: datetime
+    modified_on: datetime
+
+    @classmethod
+    def from_aggregate(
+        cls, aggregate: "AggregateRoot[TIdEntity]", **kwargs: Any
+    ) -> Self:
+        return cls(
+            id=aggregate.value_id,
+            agg_version=aggregate.version,
+            agg_unsaved_commands=aggregate.pending_events,
+            created_on=aggregate.created_on,
+            modified_on=aggregate.modified_on,
+            **kwargs,
+        )
 
 
 class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
@@ -54,6 +78,10 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
     def create_id(cls, *args: Any, **kwargs: Any):
         return cls._id_type.new(*args, **kwargs).value
 
+    @event(Deleted)
+    def delete(self) -> None:
+        pass
+
     @property
     def value_id(self) -> TIdEntity:
         # Instantiate the captured type using the stored `id` value
@@ -71,3 +99,7 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
 
     def __hash__(self) -> int:
         return hash(self.value_id)
+
+    @property
+    @abstractmethod
+    def state(self) -> AggregateState[TIdEntity]: ...

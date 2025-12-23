@@ -1,7 +1,6 @@
 # mypy: disable-error-code="misc"
 from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar
-
-from uuid6 import UUID
+from uuid import UUID
 
 from hexagonal.domain import CloudMessage, Query, TCommand, TEvento
 from hexagonal.ports.drivens import TAggregate

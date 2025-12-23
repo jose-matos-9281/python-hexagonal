@@ -1,9 +1,4 @@
-from .aggregate import (
-    AggregateRoot,
-    IdValueObject,
-    TIdEntity,
-    command,
-)
+from .aggregate import AggregateRoot, AggregateState, IdValueObject, TIdEntity, command
 from .base import (
     CloudMessage,
     Command,
@@ -70,4 +65,5 @@ __all__ = [
     "HandlerNotFound",
     "InfrastructureNotInitialized",
     "HandlerNotRegistered",
+    "AggregateState",
 ]

@@ -7,6 +7,7 @@ from .infrastructure import (
     Infrastructure,
     InfrastructureGroup,
 )
+from .query import AggregateView, GetById, GetByIdHandler, SearchAggregateRepository
 
 __all__ = [
     "BaseAPI",
@@ -21,4 +22,8 @@ __all__ = [
     "ComposableInfrastructure",
     "Infrastructure",
     "InfrastructureGroup",
+    "GetById",
+    "SearchAggregateRepository",
+    "AggregateView",
+    "GetByIdHandler",
 ]

@@ -27,5 +27,6 @@
     "python.analysis.inlayHints.variableTypes": true,
     "python.analysis.typeCheckingMode": "strict",
     "python.languageServer": "Pylance",
-    "files.autoSave": "onFocusChange"
+    "files.autoSave": "onFocusChange",
+    "python.analysis.autoImportCompletions": true
 }
