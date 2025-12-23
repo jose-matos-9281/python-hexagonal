@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Mapping
 
-from hexagonal.domain.exceptions import InfrastructureNotInitialized
+from hexagonal.domain import InfrastructureNotInitialized
 
 
 class IBaseInfrastructure(ABC):

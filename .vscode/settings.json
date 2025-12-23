@@ -1,4 +1,15 @@
 {
+    "python.testing.pytestArgs": [
+        ".",
+        "-s",
+        "-o",
+        "log_cli=true",
+        "-o",
+        "log_cli_level=INFO",
+        "-o",
+        "log_level=INFO",
+        "--ignore-glob=*/**/rabbit/*"
+    ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "makefile.configureOnOpen": false,

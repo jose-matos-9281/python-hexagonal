@@ -24,3 +24,8 @@ module-name = "hexagonal"
 [tool.ruff.lint]
 select = ["I", "E", "F", "B"]
 fixable = ["I", "E", "F", "B"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
