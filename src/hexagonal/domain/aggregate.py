@@ -1,16 +1,23 @@
-from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Generic, List, Self, Type, TypeVar, get_args, get_origin
+from typing import (
+    Any,
+    Generic,
+    Self,
+    Type,
+    TypeVar,
+    get_args,
+    get_origin,
+)
 from uuid import UUID
 
 from eventsourcing.domain import (
     AggregateCreated,
     AggregateEvent,
     BaseAggregate,
-    CanMutateAggregate,
-    Snapshot,
+    CanSnapshotAggregate,
     event,
 )
+from pydantic import ConfigDict, TypeAdapter
 from uuid6 import uuid7
 
 from .base import Inmutable, ValueObject
@@ -25,31 +32,34 @@ class IdValueObject(ValueObject[UUID]):
 
 
 TIdEntity = TypeVar("TIdEntity", bound=IdValueObject)
+datetime_adapter = TypeAdapter(datetime)
 
 
 class AggregateState(Inmutable, Generic[TIdEntity]):
     id: TIdEntity
-    agg_version: int
-    agg_unsaved_commands: List[CanMutateAggregate[Any]]
-    created_on: datetime
-    modified_on: datetime
+    model_config = ConfigDict(extra="allow")
 
-    @classmethod
-    def from_aggregate(
-        cls, aggregate: "AggregateRoot[TIdEntity]", **kwargs: Any
-    ) -> Self:
-        return cls(
-            id=aggregate.value_id,
-            agg_version=aggregate.version,
-            agg_unsaved_commands=aggregate.pending_events,
-            created_on=aggregate.created_on,
-            modified_on=aggregate.modified_on,
-            **kwargs,
-        )
+    def __init__(self, **kwargs: Any) -> None:
+        for key in ["_created_on", "_modified_on"]:
+            kwargs[key] = datetime_adapter.validate_python(kwargs[key])
+        super().__init__(**kwargs)
 
 
-class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
+TSnapshotState = TypeVar("TSnapshotState", bound=AggregateState[Any])
+
+
+class AggregateSnapshot(Inmutable, CanSnapshotAggregate[UUID], Generic[TSnapshotState]):
+    originator_id: UUID
+    originator_version: int
+    timestamp: datetime
+    topic: str
+    state: TSnapshotState
+
+
+class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity, TSnapshotState]):
     _id_type: Type[TIdEntity]
+
+    Snapshot: Type[AggregateSnapshot[TSnapshotState]]
 
     class Event(AggregateEvent):
         pass
@@ -62,10 +72,9 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
             super().mutate(aggregate)
             return None
 
-    Snapshot = Snapshot
-
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
+
         # Inspect generic base to find the concrete type argument
         for base in getattr(cls, "__orig_bases__", []):
             origin = get_origin(base)
@@ -73,6 +82,12 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
                 args = get_args(base)
                 if args:
                     cls._id_type = args[0]
+                    state_type = args[1]
+
+                    class SnapshotCls(AggregateSnapshot[state_type]):  # type: ignore[valid-type]
+                        ...
+
+                    cls.Snapshot = SnapshotCls
 
     @classmethod
     def create_id(cls, *args: Any, **kwargs: Any):
@@ -101,5 +116,5 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity]):
         return hash(self.value_id)
 
     @property
-    @abstractmethod
-    def state(self) -> AggregateState[TIdEntity]: ...
+    def state(self) -> AggregateState[TIdEntity]:
+        return self.Snapshot.take(self).state

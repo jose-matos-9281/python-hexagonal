@@ -24,7 +24,7 @@ from hexagonal.ports.drivens import (
     TManager,
 )
 
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any])
+TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
 
 
 class BaseRepositoryAdapter(IBaseRepository[TManager], Infrastructure):

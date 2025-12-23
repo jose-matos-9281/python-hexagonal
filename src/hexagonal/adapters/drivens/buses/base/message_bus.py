@@ -19,6 +19,7 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
     ):
         self._inbox_repository = inbox_repository
         self._outbox_repository = outbox_repository
+        super().__init__()
 
     @property
     def inbox_repository(self) -> IInboxRepository[TManager]:

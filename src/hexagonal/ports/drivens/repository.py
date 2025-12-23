@@ -13,7 +13,7 @@ from hexagonal.domain import (
 
 from .infrastructure import IBaseInfrastructure
 
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any])
+TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
 
 
 class IConnectionManager(IBaseInfrastructure, ABC):

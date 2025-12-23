@@ -8,7 +8,7 @@ import sqlite3
 from typing import Any, ClassVar, Dict, Mapping, Sequence, Tuple, TypeVar, Union, cast
 from uuid import UUID
 
-from eventsourcing.domain import CanMutateAggregate, Snapshot
+from eventsourcing.domain import CanMutateAggregate
 from eventsourcing.persistence import StoredEvent
 from eventsourcing.utils import strtobool
 
@@ -16,16 +16,18 @@ from hexagonal.adapters.drivens.repository.base import BaseAggregateRepositoryAd
 from hexagonal.domain import (
     AggregateNotFound,
     AggregateRoot,
+    AggregateState,
     AggregateVersionMismatch,
     TIdEntity,
 )
+from hexagonal.domain import AggregateSnapshot as Snapshot
 
 from .datastore import SQLiteConnectionContextManager
 
 # Type aliases
 SQLiteRow = Dict[str, Any]
 SQLiteParams = Union[Tuple[Any, ...], Dict[str, Any]]
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any])
+TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +122,9 @@ class SQLiteRepositoryAdapter(
             )
         return eventos, False
 
-    def _insert_snapshot(self, cursor: sqlite3.Cursor, snap: Snapshot) -> None:
+    def _insert_snapshot(
+        self, cursor: sqlite3.Cursor, snap: Snapshot[AggregateState[TIdEntity]]
+    ) -> None:
         stored_event = self._mapper.to_stored_event(snap)
         complete_table_name = self._get_table_name()
         cursor.execute(
@@ -144,7 +148,9 @@ class SQLiteRepositoryAdapter(
             ),
         )
 
-    def _update_snapshot(self, cursor: sqlite3.Cursor, snap: Snapshot) -> None:
+    def _update_snapshot(
+        self, cursor: sqlite3.Cursor, snap: Snapshot[AggregateState[TIdEntity]]
+    ) -> None:
         stored_event = self._mapper.to_stored_event(snap)
         complete_table_name = self._get_table_name()
         cursor.execute(

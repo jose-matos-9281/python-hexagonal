@@ -48,6 +48,6 @@ class AppEntrypoint(Entrypoint[IBaseApplication[TManager]]):
         GeneralBusEntrypoint = cls.BUS_INFRASTRUCTURE
 
         bus_app = cls.BUS_APP.get(env)
-        bus_infrastructure = GeneralBusEntrypoint.get(env)  # type: ignore
+        bus_infrastructure = GeneralBusEntrypoint.get(env)
         app = Application(bus_app, bus_infrastructure)
         return ApplicationProxyAdapter(app)

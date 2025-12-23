@@ -1,4 +1,11 @@
-from .aggregate import AggregateRoot, AggregateState, IdValueObject, TIdEntity, command
+from .aggregate import (
+    AggregateRoot,
+    AggregateSnapshot,
+    AggregateState,
+    IdValueObject,
+    TIdEntity,
+    command,
+)
 from .base import (
     CloudMessage,
     Command,
@@ -34,6 +41,7 @@ from .exceptions import (
 
 __all__ = [
     "AggregateRoot",
+    "AggregateSnapshot",
     "IdValueObject",
     "command",
     "TIdEntity",
