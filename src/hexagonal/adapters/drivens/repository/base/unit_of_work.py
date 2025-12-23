@@ -35,6 +35,15 @@ class BaseUnitOfWork(IUnitOfWork[TManager], InfrastructureGroup):
         if self.initialized and self._active:
             repo.attach_to_unit_of_work(self)
 
+    def detach_repo(self, repo: IBaseRepository[TManager]) -> None:
+        topic = get_topic(repo.__class__)
+        if topic not in self._repositories:
+            return
+
+        if self.initialized and self._active:
+            repo.detach_from_unit_of_work()
+        del self._repositories[topic]
+
     @property
     def connection_manager(self):
         return self._manager

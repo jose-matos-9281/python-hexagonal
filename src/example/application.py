@@ -125,7 +125,7 @@ class CambiarNombreExampleHandler(ExampleCommandHandler[CambiarNombreExample]):
 
 
 # Use Case Delete Example
-class EliminarExample(ExampleCommand, topic_suffix="Eliminar"):
+class DeleteExample(ExampleCommand, topic_suffix="Eliminar"):
     id_example: ExampleId
 
     @classmethod
@@ -133,20 +133,20 @@ class EliminarExample(ExampleCommand, topic_suffix="Eliminar"):
         return cls(id_example=ExampleId(value=id))
 
 
-class ExampleEliminado(ExampleDomainEvent, topic_suffix="Eliminado"):
+class ExampleDeleted(ExampleDomainEvent, topic_suffix="Deleted"):
     @classmethod
     def from_state(cls, state: ExampleState) -> Self:
         return cls(id_example=state.id)
 
 
-class EliminarExampleHandler(ExampleCommandHandler[EliminarExample]):
-    def execute(self, command: EliminarExample):
+class DeleteExampleHandler(ExampleCommandHandler[DeleteExample]):
+    def execute(self, command: DeleteExample):
         example_agg = self.repository.get(command.id_example)
         example_agg.delete()
         self.repository.save(example_agg)
         self.repository.delete(command.id_example)
         events: list[ExampleDomainEvent] = [
-            ExampleEliminado.from_state(example_agg.state),
+            ExampleDeleted.from_state(example_agg.state),
         ]
         return events
 
@@ -199,8 +199,8 @@ class ExampleBusApp(ComposableBusApp[TManager]):
             ),
         )
         command_bus.register_handler(
-            EliminarExample,
-            EliminarExampleHandler(
+            DeleteExample,
+            DeleteExampleHandler(
                 event_bus=event_bus, uow=self.uow, repository=self.repository
             ),
         )
@@ -212,11 +212,11 @@ class ExampleApp(IExampleApp[TManager], BusAppGroup[TManager]):
     def __init__(self, infrastructure: IAppExampleInfrastructure[TManager]):
         infrastructure.verify()
         self._infra = infrastructure
-        self._contacto_bus_app = ExampleBusApp(
+        self._example_bus_app = ExampleBusApp(
             uow=self._infra.uow,
             repository=self._infra.example_repository,
         )
-        super().__init__(infrastructure.uow, self._contacto_bus_app)
+        super().__init__(infrastructure.uow, self._example_bus_app)
 
     @property
     def infrastructure(self) -> IAppExampleInfrastructure[TManager]:
@@ -267,11 +267,11 @@ class ExampleAPI(BaseAPI[TBaseApp]):
         async_dispatch: bool = False,
         **kwargs: Any,
     ):
-        command = EliminarExample.new(id=id)
+        command = DeleteExample.new(id=id)
         return self._dispatch_command(
             command,
             events=events,
-            default_events=[],
+            default_events=[ExampleDeleted],
             async_dispatch=async_dispatch,
             **kwargs,
         )
