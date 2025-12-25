@@ -1,10 +1,10 @@
-from hexagonal.domain import AggregateRoot, AggregateState, IdValueObject, command
+from hexagonal.domain import AggregateRoot, IdValueObject, SnapshotState, command
 
 
 class ExampleId(IdValueObject): ...
 
 
-class ExampleState(AggregateState[ExampleId]):
+class ExampleState(SnapshotState[ExampleId]):
     name: str
 
 

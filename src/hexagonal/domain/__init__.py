@@ -1,8 +1,8 @@
 from .aggregate import (
     AggregateRoot,
     AggregateSnapshot,
-    AggregateState,
     IdValueObject,
+    SnapshotState,
     TIdEntity,
     command,
 )
@@ -73,5 +73,5 @@ __all__ = [
     "HandlerNotFound",
     "InfrastructureNotInitialized",
     "HandlerNotRegistered",
-    "AggregateState",
+    "SnapshotState",
 ]

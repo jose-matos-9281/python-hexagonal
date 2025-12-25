@@ -49,6 +49,21 @@ class ExampleSnapshot(ExampleIntegrationEvent, topic_suffix="Snapshot"):
             updated_on=state.modified_on,
         )
 
+    @classmethod
+    def new(
+        cls,
+        id_example: ExampleId,
+        nombre: str,
+        created_on: datetime,
+        updated_on: datetime,
+    ) -> Self:
+        return cls(
+            id_example=id_example,
+            nombre=nombre,
+            created_on=created_on,
+            updated_on=updated_on,
+        )
+
 
 T = TypeVar("T", bound=ExampleCommand)
 
@@ -82,6 +97,10 @@ class ExampleCreated(ExampleDomainEvent, topic_suffix="Created"):
     def from_state(cls, state: ExampleState) -> Self:
         return cls(id_example=state.id, nombre=state.name)
 
+    @classmethod
+    def new(cls, id_example: ExampleId, nombre: str) -> Self:
+        return cls(id_example=id_example, nombre=nombre)
+
 
 class CrearExampleHandler(ExampleCommandHandler[CreateExample]):
     def execute(self, command: CreateExample):
@@ -111,6 +130,10 @@ class NombreCambiadoExample(ExampleDomainEvent, topic_suffix="NombreCambiado"):
     def from_state(cls, state: ExampleState) -> Self:
         return cls(id_example=state.id, nuevo_nombre=state.name)
 
+    @classmethod
+    def new(cls, id_example: ExampleId, nuevo_nombre: str) -> Self:
+        return cls(id_example=id_example, nuevo_nombre=nuevo_nombre)
+
 
 class CambiarNombreExampleHandler(ExampleCommandHandler[CambiarNombreExample]):
     def execute(self, command: CambiarNombreExample):
@@ -137,6 +160,10 @@ class ExampleDeleted(ExampleDomainEvent, topic_suffix="Deleted"):
     @classmethod
     def from_state(cls, state: ExampleState) -> Self:
         return cls(id_example=state.id)
+
+    @classmethod
+    def new(cls, id_example: ExampleId) -> Self:
+        return cls(id_example=id_example)
 
 
 class DeleteExampleHandler(ExampleCommandHandler[DeleteExample]):

@@ -16,11 +16,11 @@ from hexagonal.adapters.drivens.repository.base import BaseAggregateRepositoryAd
 from hexagonal.domain import (
     AggregateNotFound,
     AggregateRoot,
-    AggregateState,
+    AggregateSnapshot,
     AggregateVersionMismatch,
+    SnapshotState,
     TIdEntity,
 )
-from hexagonal.domain import AggregateSnapshot as Snapshot
 
 from .datastore import SQLiteConnectionContextManager
 
@@ -123,7 +123,7 @@ class SQLiteRepositoryAdapter(
         return eventos, False
 
     def _insert_snapshot(
-        self, cursor: sqlite3.Cursor, snap: Snapshot[AggregateState[TIdEntity]]
+        self, cursor: sqlite3.Cursor, snap: AggregateSnapshot[SnapshotState[TIdEntity]]
     ) -> None:
         stored_event = self._mapper.to_stored_event(snap)
         complete_table_name = self._get_table_name()
@@ -144,12 +144,12 @@ class SQLiteRepositoryAdapter(
                 stored_event.originator_version,
                 stored_event.topic,
                 stored_event.state,
-                snap.timestamp,
+                snap.timestamp.isoformat(" ", "milliseconds"),
             ),
         )
 
     def _update_snapshot(
-        self, cursor: sqlite3.Cursor, snap: Snapshot[AggregateState[TIdEntity]]
+        self, cursor: sqlite3.Cursor, snap: AggregateSnapshot[SnapshotState[TIdEntity]]
     ) -> None:
         stored_event = self._mapper.to_stored_event(snap)
         complete_table_name = self._get_table_name()
@@ -168,7 +168,7 @@ class SQLiteRepositoryAdapter(
                 stored_event.originator_version,
                 stored_event.topic,
                 stored_event.state,
-                snap.timestamp,
+                snap.timestamp.isoformat(" ", "milliseconds"),
                 str(stored_event.originator_id),
                 self.aggregate_name,
             ),
@@ -203,7 +203,7 @@ class SQLiteRepositoryAdapter(
                     stored_event.originator_version,
                     stored_event.topic,
                     stored_event.state,
-                    timestamp,
+                    timestamp.isoformat(" ", "milliseconds"),
                 )
                 for stored_event, timestamp in stored_events
             ],  # type: ignore

@@ -130,7 +130,14 @@ class SQLiteOutboxRepository(
                     ) VALUES (?, ?, ?, ?)
                     """,
                 [
-                    (mid, topic, message, CanCreateTimestamp.create_timestamp())
+                    (
+                        mid,
+                        topic,
+                        message,
+                        CanCreateTimestamp.create_timestamp().isoformat(
+                            " ", "milliseconds"
+                        ),
+                    )
                     for mid, topic, message in to_stored_message
                 ],
             )
@@ -304,7 +311,9 @@ class SQLiteInboxRepository(
                     (
                         str(message.message_id),
                         handler,
-                        CanCreateTimestamp.create_timestamp(),
+                        CanCreateTimestamp.create_timestamp().isoformat(
+                            " ", "milliseconds"
+                        ),
                     ),
                 )
                 # Successfully inserted, so it's a new message
@@ -345,7 +354,9 @@ class SQLiteInboxRepository(
                 WHERE message_id = ? AND handler = ?
                 """,
                 (
-                    CanCreateTimestamp.create_timestamp(),
+                    CanCreateTimestamp.create_timestamp().isoformat(
+                        " ", "milliseconds"
+                    ),
                     str(message_id),
                     handler,
                 ),
@@ -362,7 +373,9 @@ class SQLiteInboxRepository(
                 WHERE message_id = ? AND handler = ?
                 """,
                 (
-                    CanCreateTimestamp.create_timestamp(),
+                    CanCreateTimestamp.create_timestamp().isoformat(
+                        " ", "milliseconds"
+                    ),
                     error,
                     str(message_id),
                     handler,

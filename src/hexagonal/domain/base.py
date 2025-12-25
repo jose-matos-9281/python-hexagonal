@@ -44,7 +44,7 @@ class FactoryMethod(ABC):
 
 
 class Message(Inmutable, FactoryMethod):
-    id: UUID = Field(default_factory=uuid7)
+    message_id: UUID = Field(default_factory=uuid7)
     timestamp: datetime = Field(default_factory=CanCreateTimestamp.create_timestamp)
 
 
@@ -92,7 +92,7 @@ class CloudMessage(Inmutable, FactoryMethod, Generic[TMessage]):
         mid: UUID | None = None,
         **kw: Any,
     ) -> "CloudMessage[TMessage]":
-        mid = mid or payload.id
+        mid = mid or payload.message_id
         return cls(
             type=payload.TOPIC,
             payload=payload,
@@ -109,7 +109,7 @@ class CloudMessage(Inmutable, FactoryMethod, Generic[TMessage]):
         mid: UUID | None = None,
         **kw: Any,
     ) -> "CloudMessage[TMessagePayloadType]":
-        mid = mid or payload.id
+        mid = mid or payload.message_id
         return CloudMessage(
             message_id=mid,
             type=payload.TOPIC,
