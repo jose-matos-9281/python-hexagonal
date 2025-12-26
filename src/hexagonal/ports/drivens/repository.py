@@ -79,7 +79,7 @@ class IAggregateRepository(
         ...
 
     @abstractmethod
-    def delete(self, id: TIdEntity) -> None:
+    def delete(self, id: TIdEntity) -> TAggregate:
         """Eliminar el agregado por su ID."""
         ...
 

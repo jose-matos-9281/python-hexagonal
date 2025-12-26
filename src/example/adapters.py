@@ -4,7 +4,7 @@ from uuid import UUID
 from eventsourcing.persistence import Mapper
 
 from example.domain import ExampleAggregate, ExampleId
-from example.ports import IAppExampleInfrastructure, IExampleApp
+from example.ports import IAppExampleInfrastructure, IExampleApp, IExampleRepository
 from hexagonal.adapters.drivens.repository.sqlite import (
     SQLiteConnectionContextManager,
     SQLiteRepositoryAdapter,
@@ -15,7 +15,8 @@ from hexagonal.ports.drivens import TManager
 
 
 class SQLiteExampleRepositoryAdapter(
-    SQLiteRepositoryAdapter[ExampleAggregate, ExampleId]
+    SQLiteRepositoryAdapter[ExampleAggregate, ExampleId],
+    IExampleRepository[SQLiteConnectionContextManager],
 ):
     ENV: ClassVar[Dict[str, str]] = {"TABLE_NAME": "Example"}
 
@@ -33,7 +34,7 @@ class SQLiteAppExampleInfrastructure(
             mapper,
             manager,
         )
-        self._uow = uow or SQLiteUnitOfWork(self._example_repository)
+        self._uow = uow or SQLiteUnitOfWork(self._example_repository)  # type: ignore
         if uow is None:
             return super().__init__(self._uow)
 

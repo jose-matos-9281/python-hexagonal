@@ -213,7 +213,7 @@ class SQLiteRepositoryAdapter(
         self.verify()
         with self.connection_manager.cursor() as cursor:
             eventos, new = self._verify_new_aggregate(cursor, aggregate)
-            snapshot = aggregate.Snapshot.take(aggregate)
+            snapshot = aggregate.take_snapshot()
             if new:
                 self._insert_snapshot(cursor, snapshot)
             else:
@@ -274,7 +274,7 @@ class SQLiteRepositoryAdapter(
             (str(id.value), self.aggregate_name),
         )
 
-    def delete(self, id: TIdEntity) -> None:
+    def delete(self, id: TIdEntity) -> TAggregate:
         self.verify()
         agg = self.get(id)
 
@@ -283,3 +283,4 @@ class SQLiteRepositoryAdapter(
         with self.connection_manager.cursor() as cursor:
             self._save_event_history(cursor, events)
             self._delete(cursor, id)
+        return agg

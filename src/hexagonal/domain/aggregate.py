@@ -120,10 +120,6 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity, TSnapshotState]):
     def create_id(cls, *args: Any, **kwargs: Any):
         return cls._id_type.new(*args, **kwargs).value
 
-    @event(Deleted)
-    def delete(self) -> None:
-        pass
-
     @property
     def value_id(self) -> TIdEntity:
         # Instantiate the captured type using the stored `id` value
@@ -149,3 +145,15 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity, TSnapshotState]):
     @property
     def state(self) -> TSnapshotState:
         return self.Snapshot.take(self).state
+
+    @classmethod
+    def reconstruct_from_snapshot(
+        cls,
+        snapshot: AggregateSnapshot[TSnapshotState],
+    ) -> Self:
+        agg = snapshot.mutate(None)
+        assert isinstance(agg, cls)
+        return agg
+
+    def take_snapshot(self) -> AggregateSnapshot[TSnapshotState]:
+        return self.Snapshot.take(self)

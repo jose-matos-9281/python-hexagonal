@@ -41,27 +41,12 @@ class ExampleSnapshot(ExampleIntegrationEvent, topic_suffix="Snapshot"):
     updated_on: datetime
 
     @classmethod
-    def from_state(cls, state: ExampleState) -> Self:
+    def new(cls, state: ExampleState) -> Self:
         return cls(
             id_example=state.id,
             nombre=state.name,
             created_on=state.created_on,
             updated_on=state.modified_on,
-        )
-
-    @classmethod
-    def new(
-        cls,
-        id_example: ExampleId,
-        nombre: str,
-        created_on: datetime,
-        updated_on: datetime,
-    ) -> Self:
-        return cls(
-            id_example=id_example,
-            nombre=nombre,
-            created_on=created_on,
-            updated_on=updated_on,
         )
 
 
@@ -108,7 +93,7 @@ class CrearExampleHandler(ExampleCommandHandler[CreateExample]):
         self.repository.save(example_agg)
         events: list[ExampleDomainEvent | ExampleIntegrationEvent] = [
             ExampleCreated.from_state(example_agg.state),
-            ExampleSnapshot.from_state(example_agg.state),
+            ExampleSnapshot.new(example_agg.state),
         ]
         return events
 
@@ -142,7 +127,7 @@ class CambiarNombreExampleHandler(ExampleCommandHandler[CambiarNombreExample]):
         self.repository.save(example_agg)
         events: list[ExampleDomainEvent | ExampleIntegrationEvent] = [
             NombreCambiadoExample.from_state(example_agg.state),
-            ExampleSnapshot.from_state(example_agg.state),
+            ExampleSnapshot.new(example_agg.state),
         ]
         return events
 
@@ -168,10 +153,7 @@ class ExampleDeleted(ExampleDomainEvent, topic_suffix="Deleted"):
 
 class DeleteExampleHandler(ExampleCommandHandler[DeleteExample]):
     def execute(self, command: DeleteExample):
-        example_agg = self.repository.get(command.id_example)
-        example_agg.delete()
-        self.repository.save(example_agg)
-        self.repository.delete(command.id_example)
+        example_agg = self.repository.delete(command.id_example)
         events: list[ExampleDomainEvent] = [
             ExampleDeleted.from_state(example_agg.state),
         ]
