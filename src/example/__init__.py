@@ -1,4 +1,4 @@
-from eventsourcing.utils import register_topic
+from eventsourcing.utils import get_topic, register_topic
 
 from .application import (
     CambiarNombreExample,
@@ -12,6 +12,7 @@ from .application import (
     ExampleSnapshot,
     NombreCambiadoExample,
 )
+from .domain import ExampleAggregate
 
 
 def register_topics():
@@ -25,6 +26,8 @@ def register_topics():
     register_topic(NombreCambiadoExample.TOPIC, NombreCambiadoExample)
     register_topic(DeleteExample.TOPIC, DeleteExample)
     register_topic(ExampleDeleted.TOPIC, ExampleDeleted)
+    # Register the aggregate snapshot type
+    register_topic(get_topic(ExampleAggregate.Snapshot), ExampleAggregate.Snapshot)
 
 
 register_topics()

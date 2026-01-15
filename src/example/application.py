@@ -89,12 +89,19 @@ class ExampleCreated(ExampleDomainEvent, topic_suffix="Created"):
 
 class CrearExampleHandler(ExampleCommandHandler[CreateExample]):
     def execute(self, command: CreateExample):
+        print(
+            f"    [DEBUG CrearExampleHandler] Creating aggregate with nombre={command.nombre}"
+        )
         example_agg = ExampleAggregate(nombre=command.nombre)
+        print(f"    [DEBUG CrearExampleHandler] Aggregate id={example_agg.id}")
         self.repository.save(example_agg)
         events: list[ExampleDomainEvent | ExampleIntegrationEvent] = [
             ExampleCreated.from_state(example_agg.state),
             ExampleSnapshot.new(example_agg.state),
         ]
+        print(
+            f"    [DEBUG CrearExampleHandler] Events created, id_example={events[0].id_example}"
+        )
         return events
 
 

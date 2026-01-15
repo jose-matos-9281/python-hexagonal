@@ -11,6 +11,7 @@ dependencies = [
     "eventsourcing>=9.4.6",
     "orjson>=3.11.5",
     "pydantic>=2.12.5",
+    "sqlalchemy>=2.0.45",
     "uuid6>=2025.0.1",
 ]
 
@@ -28,4 +29,7 @@ fixable = ["I", "E", "F", "B"]
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+]
+sqlalchemy = [
+    "sqlalchemy>=2.0.45",
 ]

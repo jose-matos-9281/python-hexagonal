@@ -28,9 +28,9 @@ class HandlerError(Exception):
         super().__init__(f"""
 Error al Manejar Evento {evento.__class__.__name__}
     handler: {
-            handler.__class__.__name__   # pyright: ignore[reportUnknownMemberType]
+            handler.__class__.__name__  # pyright: ignore[reportUnknownMemberType]
             if isinstance(handler, IMessageHandler)
-            else handler.__name__ 
+            else handler.__name__
         }   
     evento: {evento.type}
     datos: {evento.model_dump_json(indent=2)}
@@ -93,11 +93,23 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
         if name not in self.wait_list:
             self.wait_list[name] = []
         self.wait_list[name].append(handler)
+        logger.debug(
+            "    [DEBUG _wait_for] Added handler to wait_list[%s], now has %s handlers",
+            name,
+            len(self.wait_list[name]),
+        )
 
     def _handle_wait_list(self, event: TEvento):
         event_type = type(event)
         key = self._get_key(event_type)
+        logger.debug("    [DEBUG _handle_wait_list] Publishing event type=%s", key)
         wait_list = self.wait_list.get(key)
+        if wait_list:
+            logger.debug(
+                "    [DEBUG _handle_wait_list] Found %s handlers", len(wait_list)
+            )
+        else:
+            logger.debug("    [DEBUG _handle_wait_list] No handlers registered!")
         while wait_list:
             if self.raise_error:
                 handler = wait_list.pop()

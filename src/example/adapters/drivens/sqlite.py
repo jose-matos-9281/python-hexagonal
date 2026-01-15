@@ -4,14 +4,13 @@ from uuid import UUID
 from eventsourcing.persistence import Mapper
 
 from example.domain import ExampleAggregate, ExampleId
-from example.ports import IAppExampleInfrastructure, IExampleApp, IExampleRepository
+from example.ports import IAppExampleInfrastructure, IExampleRepository
 from hexagonal.adapters.drivens.repository.sqlite import (
     SQLiteConnectionContextManager,
     SQLiteRepositoryAdapter,
     SQLiteUnitOfWork,
 )
 from hexagonal.application import InfrastructureGroup
-from hexagonal.ports.drivens import TManager
 
 
 class SQLiteExampleRepositoryAdapter(
@@ -47,19 +46,3 @@ class SQLiteAppExampleInfrastructure(
     @property
     def uow(self):
         return self._uow
-
-
-class ExampleAppProxyAdapter(IExampleApp[TManager]):
-    def __init__(self, app: IExampleApp[TManager]):
-        self.app = app
-
-    @property
-    def uow(self):
-        return self.app.uow
-
-    def bootstrap(self, command_bus, query_bus, event_bus):  # type: ignore
-        return self.app.bootstrap(command_bus, query_bus, event_bus)
-
-    @property
-    def infrastructure(self):
-        return self.app.infrastructure
