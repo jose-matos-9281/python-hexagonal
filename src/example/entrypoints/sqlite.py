@@ -3,7 +3,7 @@ from typing import Mapping
 from example.adapters.drivens.sqlite import SQLiteAppExampleInfrastructure
 from example.adapters.drivers import ExampleAppProxyAdapter
 from example.application import ExampleApp
-from example.ports import IExampleApp
+from example.ports.drivers import IExampleApp
 from hexagonal.adapters.drivens.repository.sqlite import SQLiteConnectionContextManager
 from hexagonal.entrypoints import Entrypoint
 from hexagonal.entrypoints.sqlite import SQLiteInfrastructureEntrypoint

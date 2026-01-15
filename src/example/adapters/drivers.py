@@ -1,4 +1,4 @@
-from example.ports import IExampleApp
+from example.ports.drivers import IExampleApp
 from hexagonal.ports.drivens import TManager
 
 

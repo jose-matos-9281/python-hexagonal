@@ -1,6 +1,6 @@
 from typing import Any, Mapping, Optional
 
-from example.ports import IExampleApp
+from example.ports.drivers import IExampleApp
 from hexagonal.entrypoints import Entrypoint, EntrypointGroup
 from hexagonal.ports.drivers import IBaseApplication
 

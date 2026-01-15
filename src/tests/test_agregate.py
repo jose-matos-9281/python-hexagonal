@@ -1,4 +1,4 @@
-from example.domain import ExampleAggregate
+from example.domain.example import ExampleAggregate
 
 
 class TestAggregateExample:

@@ -1,19 +1,16 @@
 from datetime import datetime
-from typing import Any, List, Optional, Self, Type, TypeVar
+from typing import Any, Self, TypeVar
 from uuid import UUID
 
-from example.domain import ExampleAggregate, ExampleId, ExampleState
-from example.ports import IAppExampleInfrastructure, IExampleApp, IExampleRepository
+from example.domain.example import ExampleAggregate, ExampleId, ExampleState
+from example.ports.drivens import IExampleRepository
 from hexagonal.application import (
     CommandHandler,
     ComposableBusApp,
     GetById,
     GetByIdHandler,
 )
-from hexagonal.application.api import BaseAPI, TBaseApp
-from hexagonal.application.bus_app import BusAppGroup
 from hexagonal.domain import Command, DomainEvent, IntegrationEvent
-from hexagonal.domain.base import TEvento
 from hexagonal.ports.drivens import (
     ICommandBus,
     IEventBus,
@@ -222,79 +219,3 @@ class ExampleBusApp(ComposableBusApp[TManager]):
         )
 
         query_bus.register_handler(GetExampleById, GetByIdHandler(self.repository))
-
-
-class ExampleApp(IExampleApp[TManager], BusAppGroup[TManager]):
-    def __init__(self, infrastructure: IAppExampleInfrastructure[TManager]):
-        infrastructure.verify()
-        self._infra = infrastructure
-        self._example_bus_app = ExampleBusApp(
-            uow=self._infra.uow,
-            repository=self._infra.example_repository,
-        )
-        super().__init__(infrastructure.uow, self._example_bus_app)
-
-    @property
-    def infrastructure(self) -> IAppExampleInfrastructure[TManager]:
-        return self._infra
-
-
-class ExampleAPI(BaseAPI[TBaseApp]):
-    def crear(
-        self,
-        nombre: str,
-        *,
-        events: Optional[List[Type[TEvento]]] = None,
-        async_dispatch: bool = False,
-        **kwargs: Any,
-    ):
-        command = CreateExample.new(nombre=nombre)
-        return self._dispatch_command(
-            command,
-            events=events,
-            default_events=[ExampleSnapshot],
-            async_dispatch=async_dispatch,
-            **kwargs,
-        )
-
-    def cambiar_nombre(
-        self,
-        id: UUID,
-        nuevo_nombre: str,
-        *,
-        events: Optional[List[Type[TEvento]]] = None,
-        async_dispatch: bool = False,
-        **kwargs: Any,
-    ):
-        command = CambiarNombreExample.new(id=id, nuevo_nombre=nuevo_nombre)
-        return self._dispatch_command(
-            command,
-            events=events,
-            default_events=[ExampleSnapshot],
-            async_dispatch=async_dispatch,
-            **kwargs,
-        )
-
-    def eliminar(
-        self,
-        id: UUID,
-        *,
-        events: Optional[List[Type[TEvento]]] = None,
-        async_dispatch: bool = False,
-        **kwargs: Any,
-    ):
-        command = DeleteExample.new(id=id)
-        return self._dispatch_command(
-            command,
-            events=events,
-            default_events=[ExampleDeleted],
-            async_dispatch=async_dispatch,
-            **kwargs,
-        )
-
-    def get(
-        self,
-        id: UUID,
-        **kwargs: Any,
-    ):
-        return self._get_aggregate(id, GetExampleById)

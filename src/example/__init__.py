@@ -1,6 +1,6 @@
 from eventsourcing.utils import get_topic, register_topic
 
-from .application import (
+from .application.example.app import (
     CambiarNombreExample,
     CreateExample,
     DeleteExample,
@@ -12,7 +12,7 @@ from .application import (
     ExampleSnapshot,
     NombreCambiadoExample,
 )
-from .domain import ExampleAggregate
+from .domain.example import ExampleAggregate
 
 
 def register_topics():

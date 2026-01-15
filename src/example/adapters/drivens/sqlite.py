@@ -3,8 +3,8 @@ from uuid import UUID
 
 from eventsourcing.persistence import Mapper
 
-from example.domain import ExampleAggregate, ExampleId
-from example.ports import IAppExampleInfrastructure, IExampleRepository
+from example.domain.example import ExampleAggregate, ExampleId
+from example.ports.drivens import IAppExampleInfrastructure, IExampleRepository
 from hexagonal.adapters.drivens.repository.sqlite import (
     SQLiteConnectionContextManager,
     SQLiteRepositoryAdapter,

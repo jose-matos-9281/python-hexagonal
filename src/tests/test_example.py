@@ -3,7 +3,11 @@ import os
 from eventsourcing.utils import clear_topic_cache
 
 from example import register_topics
-from example.application import ExampleAPI, ExampleCreated, NombreCambiadoExample
+from example.application.example.app import (
+    ExampleAPI,
+    ExampleCreated,
+    NombreCambiadoExample,
+)
 from example.entrypoints.app import ExampleAppEntrypoint
 
 
