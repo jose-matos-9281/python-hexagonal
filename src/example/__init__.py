@@ -1,46 +1,10 @@
-from eventsourcing.utils import get_topic, register_topic
-
-from .application.example.app import (
-    CambiarNombreExample,
-    CreateExample,
-    DeleteExample,
-    ExampleCommand,
-    ExampleCreated,
-    ExampleDeleted,
-    ExampleDomainEvent,
-    ExampleIntegrationEvent,
-    ExampleSnapshot,
-    NombreCambiadoExample,
-)
-from .domain.example import ExampleAggregate
+from .application import register_topics as register_topics_example
+from .domain import register_topics as register_topics_domain
 
 
 def register_topics():
-    register_topic(ExampleCommand.TOPIC, ExampleCommand)
-    register_topic(ExampleDomainEvent.TOPIC, ExampleDomainEvent)
-    register_topic(ExampleIntegrationEvent.TOPIC, ExampleIntegrationEvent)
-    register_topic(ExampleSnapshot.TOPIC, ExampleSnapshot)
-    register_topic(CreateExample.TOPIC, CreateExample)
-    register_topic(ExampleCreated.TOPIC, ExampleCreated)
-    register_topic(CambiarNombreExample.TOPIC, CambiarNombreExample)
-    register_topic(NombreCambiadoExample.TOPIC, NombreCambiadoExample)
-    register_topic(DeleteExample.TOPIC, DeleteExample)
-    register_topic(ExampleDeleted.TOPIC, ExampleDeleted)
-    # Register the aggregate snapshot type
-    register_topic(get_topic(ExampleAggregate.Snapshot), ExampleAggregate.Snapshot)
+    register_topics_example()
+    register_topics_domain()
 
 
 register_topics()
-__all__ = [
-    "CreateExample",
-    "ExampleCommand",
-    "ExampleCreated",
-    "ExampleDomainEvent",
-    "ExampleIntegrationEvent",
-    "ExampleSnapshot",
-    "NombreCambiadoExample",
-    "CambiarNombreExample",
-    "DeleteExample",
-    "ExampleDeleted",
-    "register_topics",
-]

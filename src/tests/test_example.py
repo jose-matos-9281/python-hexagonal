@@ -1,9 +1,10 @@
 import os
+from decimal import Decimal
 
 from eventsourcing.utils import clear_topic_cache
 
 from example import register_topics
-from example.application.example.app import (
+from example.application import (
     ExampleAPI,
     ExampleCreated,
     NombreCambiadoExample,
@@ -35,8 +36,9 @@ class TestApplicationSqlite:
 
 class TestCrudExampleSqlite:
     env = {
-        "ENV_REPOSITORY": "sqlite",
+        "ENV_REPOSITORY": "sqlalchemy",
         "SQLITE_DB_PATH": "test.db",
+        "SQLALCHEMY_DATABASE_URL": "sqlite:///test.db",
         "RESET_TABLES": "true",
         "CREATE_TABLES": "true",
     }
@@ -54,7 +56,9 @@ class TestCrudExampleSqlite:
 
     def test_create_read_update_delete(self):
         # Create
-        cmd, evts = self.api.crear(nombre="Ejemplo 1", events=[ExampleCreated])
+        cmd, evts = self.api.crear(
+            nombre="Ejemplo 1", valor_example=Decimal("10.5"), events=[ExampleCreated]
+        )
         assert cmd is not None
         assert len(evts) == 2
 
@@ -65,6 +69,7 @@ class TestCrudExampleSqlite:
         agg = self.api.get(example_id.value)
         assert agg is not None
         assert agg.name == "Ejemplo 1"
+        assert agg.valor.value == Decimal("10.5")
 
         cmd, evts = self.api.cambiar_nombre(
             example_id.value,

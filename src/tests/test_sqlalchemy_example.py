@@ -1,16 +1,17 @@
 """Tests for SQLAlchemy repository adapter."""
 
 import os
-from typing import Any
+from decimal import Decimal
 
 from eventsourcing.utils import clear_topic_cache
 
 from example import register_topics
-from example.application.example.app import (
+from example.application import (
     ExampleAPI,
     ExampleCreated,
     NombreCambiadoExample,
 )
+from example.domain.example import ExampleId
 from example.entrypoints import ExampleAppEntrypoint
 from hexagonal.entrypoints.sqlalchemy import clear_infrastructure_cache
 
@@ -74,7 +75,9 @@ class TestCrudExampleSQLAlchemy:
         """Test full CRUD cycle for aggregates."""
         # Create
         cmd, evts = self.api.crear(
-            nombre="Ejemplo SQLAlchemy 1", events=[ExampleCreated]
+            nombre="Ejemplo SQLAlchemy 1",
+            valor_example=Decimal("10.5"),
+            events=[ExampleCreated],
         )
         assert cmd is not None
         assert len(evts) == 2
@@ -128,11 +131,15 @@ class TestSQLAlchemyMultipleAggregates:
 
     def test_multiple_aggregates(self):
         """Test creating and reading multiple aggregates."""
-        ids: list[Any] = []
+        ids: list[ExampleId] = []
 
         # Create multiple aggregates
         for i in range(5):
-            _, evts = self.api.crear(nombre=f"Aggregate {i}", events=[ExampleCreated])
+            _, evts = self.api.crear(
+                nombre=f"Aggregate {i}",
+                valor_example=Decimal("10.5"),
+                events=[ExampleCreated],
+            )
             created = evts[ExampleCreated]
             assert isinstance(created, ExampleCreated)
             print(f"Created aggregate {i}: id={created.id_example.value}")
@@ -144,15 +151,23 @@ class TestSQLAlchemyMultipleAggregates:
             agg = self.api.get(agg_id.value)
             print(f"  Got: id={agg.id}, name={agg.name}")
             assert agg is not None
-            assert agg.name == f"Aggregate {i}", (
-                f"Expected 'Aggregate {i}', got '{agg.name}' for id {agg_id.value}"
-            )
+            assert (
+                agg.name == f"Aggregate {i}"
+            ), f"Expected 'Aggregate {i}', got '{agg.name}' for id {agg_id.value}"
 
     def test_update_multiple_aggregates(self):
         """Test updating multiple aggregates."""
         # Create
-        _, evts1 = self.api.crear(nombre="First", events=[ExampleCreated])
-        _, evts2 = self.api.crear(nombre="Second", events=[ExampleCreated])
+        _, evts1 = self.api.crear(
+            nombre="First",
+            valor_example=Decimal("10.5"),
+            events=[ExampleCreated],
+        )
+        _, evts2 = self.api.crear(
+            nombre="Second",
+            valor_example=Decimal("10.5"),
+            events=[ExampleCreated],
+        )
         evt1 = evts1[ExampleCreated]
         evt2 = evts2[ExampleCreated]
         assert isinstance(evt1, ExampleCreated)

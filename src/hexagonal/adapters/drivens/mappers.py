@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Hashable, cast
 from uuid import UUID
 
@@ -119,9 +120,15 @@ class MessageMapper(Mapper[UUID]):
         return cls.model_validate(event_state)
 
 
+def default_orjson_value_serializer(obj: Any) -> Any:
+    if isinstance(obj, (UUID, Decimal)):
+        return str(obj)
+    raise TypeError
+
+
 class OrjsonTranscoder(Transcoder):
     def encode(self, obj: Any) -> bytes:
-        return orjson.dumps(obj)
+        return orjson.dumps(obj, default=default_orjson_value_serializer)
 
     def decode(self, data: bytes) -> Any:
         return orjson.loads(data)
