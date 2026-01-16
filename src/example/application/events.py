@@ -1,4 +1,4 @@
-from .example.app import (
+from .example.use_cases import (
     ExampleCreated,
     ExampleDeleted,
     ExampleSnapshot,

@@ -1,16 +1,8 @@
-from datetime import datetime
-from typing import Any, Self, TypeVar
-from uuid import UUID
-
-from example.domain.example import ExampleAggregate, ExampleId, ExampleState
 from example.ports.drivens import IExampleRepository
 from hexagonal.application import (
-    CommandHandler,
     ComposableBusApp,
-    GetById,
     GetByIdHandler,
 )
-from hexagonal.domain import Command, DomainEvent, IntegrationEvent
 from hexagonal.ports.drivens import (
     ICommandBus,
     IEventBus,
@@ -19,161 +11,15 @@ from hexagonal.ports.drivens import (
     TManager,
 )
 
-
-# Define example name space commands and events
-class ExampleCommand(Command, topic_suffix="Example"): ...
-
-
-class ExampleDomainEvent(DomainEvent, topic_suffix="Example"):
-    id_example: ExampleId
-
-
-class ExampleIntegrationEvent(IntegrationEvent, topic_suffix="Example"):
-    id_example: ExampleId
-
-
-class ExampleSnapshot(ExampleIntegrationEvent, topic_suffix="Snapshot"):
-    nombre: str
-    created_on: datetime
-    updated_on: datetime
-
-    @classmethod
-    def new(cls, state: ExampleState) -> Self:
-        return cls(
-            id_example=state.id,
-            nombre=state.name,
-            created_on=state.created_on,
-            updated_on=state.modified_on,
-        )
-
-
-T = TypeVar("T", bound=ExampleCommand)
-
-
-class ExampleCommandHandler(CommandHandler[T]):
-    repository: IExampleRepository[Any]
-
-    def __init__(
-        self,
-        event_bus: IEventBus[TManager],
-        uow: IUnitOfWork[TManager],
-        repository: IExampleRepository[TManager],
-    ) -> None:
-        super().__init__(event_bus, uow, repository)
-        self.repository = repository
-
-
-# Use Case Create Example
-class CreateExample(ExampleCommand, topic_suffix="Create"):
-    nombre: str
-
-    @classmethod
-    def new(cls, nombre: str):
-        return cls(nombre=nombre)
-
-
-class ExampleCreated(ExampleDomainEvent, topic_suffix="Created"):
-    nombre: str
-
-    @classmethod
-    def from_state(cls, state: ExampleState) -> Self:
-        return cls(id_example=state.id, nombre=state.name)
-
-    @classmethod
-    def new(cls, id_example: ExampleId, nombre: str) -> Self:
-        return cls(id_example=id_example, nombre=nombre)
-
-
-class CrearExampleHandler(ExampleCommandHandler[CreateExample]):
-    def execute(self, command: CreateExample):
-        print(
-            f"    [DEBUG CrearExampleHandler] Creating aggregate with nombre={command.nombre}"
-        )
-        example_agg = ExampleAggregate(nombre=command.nombre)
-        print(f"    [DEBUG CrearExampleHandler] Aggregate id={example_agg.id}")
-        self.repository.save(example_agg)
-        events: list[ExampleDomainEvent | ExampleIntegrationEvent] = [
-            ExampleCreated.from_state(example_agg.state),
-            ExampleSnapshot.new(example_agg.state),
-        ]
-        print(
-            f"    [DEBUG CrearExampleHandler] Events created, id_example={events[0].id_example}"
-        )
-        return events
-
-
-# Use Case Change Name Example
-class CambiarNombreExample(ExampleCommand, topic_suffix="CambiarNombre"):
-    id_example: ExampleId
-    nuevo_nombre: str
-
-    @classmethod
-    def new(cls, id: UUID, nuevo_nombre: str) -> Self:
-        return cls(id_example=ExampleId(value=id), nuevo_nombre=nuevo_nombre)
-
-
-class NombreCambiadoExample(ExampleDomainEvent, topic_suffix="NombreCambiado"):
-    nuevo_nombre: str
-
-    @classmethod
-    def from_state(cls, state: ExampleState) -> Self:
-        return cls(id_example=state.id, nuevo_nombre=state.name)
-
-    @classmethod
-    def new(cls, id_example: ExampleId, nuevo_nombre: str) -> Self:
-        return cls(id_example=id_example, nuevo_nombre=nuevo_nombre)
-
-
-class CambiarNombreExampleHandler(ExampleCommandHandler[CambiarNombreExample]):
-    def execute(self, command: CambiarNombreExample):
-        example_agg = self.repository.get(command.id_example)
-        example_agg.change_name(command.nuevo_nombre)
-        self.repository.save(example_agg)
-        events: list[ExampleDomainEvent | ExampleIntegrationEvent] = [
-            NombreCambiadoExample.from_state(example_agg.state),
-            ExampleSnapshot.new(example_agg.state),
-        ]
-        return events
-
-
-# Use Case Delete Example
-class DeleteExample(ExampleCommand, topic_suffix="Eliminar"):
-    id_example: ExampleId
-
-    @classmethod
-    def new(cls, id: UUID) -> Self:
-        return cls(id_example=ExampleId(value=id))
-
-
-class ExampleDeleted(ExampleDomainEvent, topic_suffix="Deleted"):
-    @classmethod
-    def from_state(cls, state: ExampleState) -> Self:
-        return cls(id_example=state.id)
-
-    @classmethod
-    def new(cls, id_example: ExampleId) -> Self:
-        return cls(id_example=id_example)
-
-
-class DeleteExampleHandler(ExampleCommandHandler[DeleteExample]):
-    def execute(self, command: DeleteExample):
-        example_agg = self.repository.delete(command.id_example)
-        events: list[ExampleDomainEvent] = [
-            ExampleDeleted.from_state(example_agg.state),
-        ]
-        return events
-
-
-# Query to get Example by Id
-class GetExampleById(GetById[ExampleAggregate, ExampleId]):
-    @classmethod
-    def new(cls, id: ExampleId | UUID, *_: Any, **__: Any):
-        if isinstance(id, UUID):
-            id = ExampleId(value=id)
-        return super().new(id=id, agg_type=ExampleAggregate)
-
-
-# Register Handler in Bus App
+from .use_cases import (
+    CambiarNombreExample,
+    CambiarNombreExampleHandler,
+    CrearExampleHandler,
+    CreateExample,
+    DeleteExample,
+    DeleteExampleHandler,
+    GetExampleById,
+)
 
 
 class ExampleBusApp(ComposableBusApp[TManager]):

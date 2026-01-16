@@ -1,4 +1,4 @@
-from .example.app import GetExampleById
+from .example.use_cases import GetExampleById
 
 __all__ = [
     "GetExampleById",
