@@ -32,6 +32,10 @@ class IdValueObject(ValueObject[UUID]):
     def new(cls, *_: Any, **__: Any) -> Self:
         return cls(value=uuid7())
 
+    @classmethod
+    def from_value(cls, value: Self | UUID) -> Self:
+        return cls(value=value if isinstance(value, UUID) else value.value)
+
 
 class ExternalId(ValueObject[UUID]):
     @classmethod

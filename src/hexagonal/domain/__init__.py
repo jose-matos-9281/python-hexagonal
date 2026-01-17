@@ -1,6 +1,7 @@
 from .aggregate import (
     AggregateRoot,
     AggregateSnapshot,
+    ExternalId,
     IdValueObject,
     SnapshotState,
     TIdEntity,
@@ -40,6 +41,7 @@ from .exceptions import (
 )
 
 __all__ = [
+    "ExternalId",
     "AggregateRoot",
     "AggregateSnapshot",
     "IdValueObject",
