@@ -8,6 +8,7 @@ from .infrastructure import (
     InfrastructureGroup,
 )
 from .query import AggregateView, GetById, GetByIdHandler, SearchAggregateRepository
+from .topics import RegisterTopics
 
 __all__ = [
     "BaseAPI",
@@ -26,4 +27,5 @@ __all__ = [
     "SearchAggregateRepository",
     "AggregateView",
     "GetByIdHandler",
+    "RegisterTopics",
 ]
