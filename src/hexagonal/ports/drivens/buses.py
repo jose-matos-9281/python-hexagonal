@@ -1,4 +1,6 @@
+import threading
 from abc import ABC, abstractmethod
+from asyncio import Event
 from typing import Callable, Generic, Literal, Type, overload
 
 from hexagonal.domain import (
@@ -35,6 +37,8 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
     def consume(self, limit: int | None = None):
         """Consumir mensajes desde la inbox, hasta el límite especificado."""
         ...
+
+    async def consume_async(self, shutdown_event: Event | threading.Event): ...
 
 
 class ICommandBus(IBaseMessageBus[TManager], ABC):
