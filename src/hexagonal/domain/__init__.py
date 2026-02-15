@@ -1,9 +1,11 @@
 from .aggregate import (
     AggregateRoot,
     AggregateSnapshot,
+    Entity,
     ExternalId,
     IdValueObject,
     SnapshotState,
+    TAggregate,
     TIdEntity,
     command,
 )
@@ -39,6 +41,7 @@ from .exceptions import (
     HandlerNotRegistered,
     InfrastructureNotInitialized,
 )
+from .queries import AggregateView, GetById
 
 __all__ = [
     "ExternalId",
@@ -76,4 +79,8 @@ __all__ = [
     "InfrastructureNotInitialized",
     "HandlerNotRegistered",
     "SnapshotState",
+    "Entity",
+    "TAggregate",
+    "AggregateView",
+    "GetById",
 ]

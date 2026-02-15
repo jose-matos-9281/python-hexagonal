@@ -4,16 +4,14 @@ from typing import Any, Generic, List, Self, TypeVar
 from uuid import UUID
 
 from hexagonal.domain import (
-    AggregateRoot,
     CloudMessage,
+    TAggregate,
     TIdEntity,
     TQuery,
     TView,
 )
 
 from .infrastructure import IBaseInfrastructure
-
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
 
 
 class IConnectionManager(IBaseInfrastructure, ABC):

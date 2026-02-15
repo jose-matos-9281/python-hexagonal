@@ -1,7 +1,6 @@
-from typing import Any, Generic, List, Mapping, Type
+from typing import Generic, List, Mapping
 
-from hexagonal.application.handlers import QueryHandler
-from hexagonal.domain import Query, TIdEntity, ValueObject
+from hexagonal.domain import AggregateView, GetById, TIdEntity
 from hexagonal.ports.drivens import (
     IAggregateRepository,
     ISearchRepository,
@@ -10,16 +9,7 @@ from hexagonal.ports.drivens import (
 )
 from hexagonal.ports.drivens.repository import IUnitOfWork
 
-
-class AggregateView(ValueObject[TAggregate]): ...
-
-
-class GetById(Query[AggregateView[TAggregate]], Generic[TAggregate, TIdEntity]):
-    id: TIdEntity
-
-    @classmethod
-    def new(cls, id: TIdEntity, agg_type: Type[TAggregate], *_: Any, **__: Any):
-        return cls(id=id, view=AggregateView[agg_type])  # type: ignore
+from .handlers import QueryHandler
 
 
 class SearchAggregateRepository(

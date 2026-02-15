@@ -1,13 +1,5 @@
 from datetime import datetime
-from typing import (
-    Any,
-    Generic,
-    Self,
-    Type,
-    TypeVar,
-    get_args,
-    get_origin,
-)
+from typing import Any, Generic, Self, Type, TypeVar, cast, get_args, get_origin
 from uuid import UUID
 
 from eventsourcing.domain import (
@@ -19,7 +11,7 @@ from eventsourcing.domain import (
     event,
 )
 from eventsourcing.utils import get_topic
-from pydantic import ConfigDict, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 from uuid6 import uuid7
 
 from .base import Inmutable, ValueObject
@@ -45,6 +37,18 @@ class ExternalId(ValueObject[UUID]):
 
 TIdEntity = TypeVar("TIdEntity", bound=IdValueObject)
 datetime_adapter = TypeAdapter(datetime)
+
+
+class Entity(BaseModel, Generic[TIdEntity]):
+    id: TIdEntity = Field(frozen=True)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Entity):
+            return False
+        return self.id == cast(Entity[TIdEntity], other).id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
 
 class SnapshotState(Inmutable, Generic[TIdEntity]):
@@ -167,3 +171,6 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity, TSnapshotState]):
 
     def take_snapshot(self) -> AggregateSnapshot[TSnapshotState]:
         return self.Snapshot.take(self)
+
+
+TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
