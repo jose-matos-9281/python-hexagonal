@@ -12,7 +12,7 @@ from .outbox import (
     SQLAlchemyOutboxRepository,
     SQLAlchemyPairInboxOutbox,
 )
-from .repository import SQLAlchemyRepositoryAdapter
+from .repository import SQLAlchemyEntityRepositoryAdapter, SQLAlchemyRepositoryAdapter
 from .unit_of_work import SQLAlchemyUnitOfWork
 
 __all__ = [
@@ -24,4 +24,5 @@ __all__ = [
     "SQLAlchemyInboxRepository",
     "SQLAlchemyInfrastructure",
     "SQLAlchemyPairInboxOutbox",
+    "SQLAlchemyEntityRepositoryAdapter",
 ]

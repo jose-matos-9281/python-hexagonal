@@ -6,6 +6,7 @@ from uuid import UUID
 from hexagonal.domain import (
     CloudMessage,
     TAggregate,
+    TEntity,
     TIdEntity,
     TQuery,
     TView,
@@ -79,6 +80,26 @@ class IAggregateRepository(
     @abstractmethod
     def delete(self, id: TIdEntity) -> TAggregate:
         """Eliminar el agregado por su ID."""
+        ...
+
+
+class IEntityRepository(
+    IBaseRepository[TManager],
+    Generic[TManager, TEntity, TIdEntity],
+):
+    @abstractmethod
+    def save(self, entity: TEntity) -> None:
+        """Persistir la entidad en el almacenamiento."""
+        ...
+
+    @abstractmethod
+    def get(self, id: TIdEntity) -> TEntity:
+        """Recuperar la entidad por su ID."""
+        ...
+
+    @abstractmethod
+    def delete(self, id: TIdEntity) -> TEntity:
+        """Eliminar la entidad por su ID."""
         ...
 
 

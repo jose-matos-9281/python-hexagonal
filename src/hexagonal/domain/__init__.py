@@ -6,6 +6,8 @@ from .aggregate import (
     IdValueObject,
     SnapshotState,
     TAggregate,
+    TAggregateOrEntity,
+    TEntity,
     TIdEntity,
     command,
 )
@@ -83,4 +85,6 @@ __all__ = [
     "TAggregate",
     "AggregateView",
     "GetById",
+    "TAggregateOrEntity",
+    "TEntity",
 ]

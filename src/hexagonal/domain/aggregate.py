@@ -174,3 +174,8 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity, TSnapshotState]):
 
 
 TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
+TEntity = TypeVar("TEntity", bound=Entity[Any])
+
+TAggregateOrEntity = TypeVar(
+    "TAggregateOrEntity", bound=AggregateRoot[Any, Any] | Entity[Any]
+)

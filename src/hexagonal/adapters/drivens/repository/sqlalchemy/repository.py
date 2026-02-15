@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, ClassVar, Dict, Mapping, Sequence, Tuple, TypeVar, cast
+from typing import Any, ClassVar, Dict, Mapping, Sequence, Tuple, cast
 from uuid import UUID
 
 from eventsourcing.domain import CanMutateAggregate
@@ -11,22 +11,46 @@ from eventsourcing.persistence import StoredEvent
 from eventsourcing.utils import strtobool
 from sqlalchemy import Connection, delete, insert, select, update
 
-from hexagonal.adapters.drivens.repository.base import BaseAggregateRepositoryAdapter
+from hexagonal.adapters.drivens.repository.base import (
+    BaseAggregateRepositoryAdapter,
+    BaseEntityRepositoryAdapter,
+)
 from hexagonal.domain import (
     AggregateNotFound,
-    AggregateRoot,
     AggregateSnapshot,
     AggregateVersionMismatch,
     SnapshotState,
+    TAggregate,
+    TEntity,
     TIdEntity,
 )
 
 from .datastore import SQLAlchemyConnectionContextManager
 from .models import create_aggregates_table, create_events_table
 
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
-
 logger = logging.getLogger(__name__)
+
+
+class SQLAlchemyEntityRepositoryAdapter(
+    BaseEntityRepositoryAdapter[SQLAlchemyConnectionContextManager, TEntity, TIdEntity]
+):
+    """SQLAlchemy repository adapter for entities.
+
+    This adapter implements the IEntityRepository interface using SQLAlchemy
+    as the backing store. It handles the persistence and retrieval of entities.
+
+    Supports multiple database backends (PostgreSQL, MySQL, SQLite) through
+    SQLAlchemy's abstraction layer.
+
+    Args:
+        mapper: Mapper for converting between domain and persistence models
+        connection_manager: SQLAlchemy connection context manager
+    """
+
+    def initialize(self, env: Mapping[str, str]) -> None:
+        """Initialize the repository from environment variables."""
+        super().initialize(env)
+        self._schema_name: str | None = self.env.get("SCHEMA_NAME")
 
 
 class SQLAlchemyRepositoryAdapter(

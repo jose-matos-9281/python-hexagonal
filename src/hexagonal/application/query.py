@@ -1,13 +1,19 @@
 from typing import Generic, List, Mapping
 
-from hexagonal.domain import AggregateView, GetById, TIdEntity
+from hexagonal.domain import (
+    AggregateView,
+    GetById,
+    TAggregate,
+    TEntity,
+    TIdEntity,
+)
 from hexagonal.ports.drivens import (
     IAggregateRepository,
+    IEntityRepository,
     ISearchRepository,
-    TAggregate,
+    IUnitOfWork,
     TManager,
 )
-from hexagonal.ports.drivens.repository import IUnitOfWork
 
 from .handlers import QueryHandler
 
@@ -15,19 +21,23 @@ from .handlers import QueryHandler
 class SearchAggregateRepository(
     ISearchRepository[
         TManager,
-        GetById[TAggregate, TIdEntity],
-        AggregateView[TAggregate],
+        GetById[TAggregate | TEntity, TIdEntity],
+        AggregateView[TAggregate | TEntity],
     ],
-    Generic[TManager, TAggregate, TIdEntity],
+    Generic[TManager, TIdEntity, TAggregate, TEntity],
 ):
-    def __init__(self, repo: IAggregateRepository[TManager, TAggregate, TIdEntity]):
+    def __init__(
+        self,
+        repo: IAggregateRepository[TManager, TAggregate, TIdEntity]
+        | IEntityRepository[TManager, TEntity, TIdEntity],
+    ):
         self._repo = repo
 
     def search(
-        self, query: GetById[TAggregate, TIdEntity]
-    ) -> List[AggregateView[TAggregate]]:
+        self, query: GetById[TAggregate | TEntity, TIdEntity]
+    ) -> List[AggregateView[TAggregate | TEntity]]:
         aggregate = self._repo.get(query.id)
-        return [AggregateView[TAggregate].new(aggregate)]
+        return [AggregateView[TAggregate | TEntity].new(aggregate)]
 
     ## decorate methods from IAggregateRepository to pass through initialization ##
     def initialize(self, env: Mapping[str, str]) -> None:
@@ -51,11 +61,15 @@ class SearchAggregateRepository(
 class GetByIdHandler(
     QueryHandler[
         TManager,
-        GetById[TAggregate, TIdEntity],
-        AggregateView[TAggregate],
+        GetById[TAggregate | TEntity, TIdEntity],
+        AggregateView[TAggregate | TEntity],
     ],
-    Generic[TManager, TAggregate, TIdEntity],
+    Generic[TManager, TIdEntity, TAggregate, TEntity],
 ):
-    def __init__(self, agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]):
+    def __init__(
+        self,
+        agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]
+        | IEntityRepository[TManager, TEntity, TIdEntity],
+    ):
         search = SearchAggregateRepository(agg_repo)
         super().__init__(search)
