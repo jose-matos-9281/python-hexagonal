@@ -1,4 +1,4 @@
-from typing import Generic, List, Mapping
+from typing import Any, Generic, List, Mapping
 
 from hexagonal.domain import (
     AggregateView,
@@ -73,3 +73,13 @@ class GetByIdHandler(
     ):
         search = SearchAggregateRepository(agg_repo)
         super().__init__(search)
+
+
+class GetAggregateByIdHandler(GetByIdHandler[TManager, TIdEntity, TAggregate, Any]):
+    def __init__(self, agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]):
+        super().__init__(agg_repo)
+
+
+class GetEntityByIdHandler(GetByIdHandler[TManager, TIdEntity, Any, TEntity]):
+    def __init__(self, entity_repo: IEntityRepository[TManager, TEntity, TIdEntity]):
+        super().__init__(entity_repo)

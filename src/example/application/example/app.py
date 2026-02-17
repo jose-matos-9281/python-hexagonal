@@ -64,4 +64,6 @@ class ExampleBusApp(ComposableBusApp[TManager]):
             ),
         )
 
-        query_bus.register_handler(GetExampleById, GetByIdHandler(self.repository))
+        query_bus.register_handler(
+            GetExampleById, GetByIdHandler.from_repo(self.repository)
+        )

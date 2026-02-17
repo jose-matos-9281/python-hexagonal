@@ -21,6 +21,8 @@ from .base import (
     IntegrationEvent,
     Message,
     Query,
+    QueryBase,
+    QueryOne,
     QueryResult,
     QueryResults,
     TCommand,
@@ -87,4 +89,6 @@ __all__ = [
     "GetById",
     "TAggregateOrEntity",
     "TEntity",
+    "QueryOne",
+    "QueryBase",
 ]

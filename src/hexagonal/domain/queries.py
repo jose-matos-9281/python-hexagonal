@@ -1,14 +1,14 @@
 from typing import Any, Generic, Type
 
 from .aggregate import TAggregateOrEntity, TIdEntity
-from .base import Query, ValueObject
+from .base import QueryOne, ValueObject
 
 
 class AggregateView(ValueObject[TAggregateOrEntity]): ...
 
 
 class GetById(
-    Query[AggregateView[TAggregateOrEntity]], Generic[TAggregateOrEntity, TIdEntity]
+    QueryOne[AggregateView[TAggregateOrEntity]], Generic[TAggregateOrEntity, TIdEntity]
 ):
     id: TIdEntity
 

@@ -132,8 +132,16 @@ class View(Inmutable): ...
 TView = TypeVar("TView", bound=ValueObject[Any])
 
 
-class Query(Inmutable, FactoryMethod, HasTopic, Generic[TView]):
+class QueryBase(Inmutable, FactoryMethod, HasTopic, Generic[TView]):
     view: Type[TView]
+
+
+class Query(QueryBase[TView]):
+    TOPIC: ClassVar[str] = "Query"
+
+
+class QueryOne(QueryBase[TView]):
+    TOPIC: ClassVar[str] = "QueryOne"
 
 
 class QueryResults(Inmutable, Generic[TView], FactoryMethod):
@@ -166,4 +174,4 @@ class QueryResult(Inmutable, Generic[TView], FactoryMethod):
         return cls(item=item)
 
 
-TQuery = TypeVar("TQuery", bound=Query[Any], contravariant=True)
+TQuery = TypeVar("TQuery", bound=QueryBase[Any], contravariant=True)

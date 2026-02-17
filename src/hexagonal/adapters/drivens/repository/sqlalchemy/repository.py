@@ -52,6 +52,59 @@ class SQLAlchemyEntityRepositoryAdapter(
         super().initialize(env)
         self._schema_name: str | None = self.env.get("SCHEMA_NAME")
 
+    def _get(self, conn: Connection, id: TIdEntity) -> TEntity | None:
+        """Fetch entity from database."""
+        # Implement entity retrieval logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        return None
+
+    def _insert(self, conn: Connection, entity: TEntity) -> None:
+        """Save an entity to the database."""
+        # Implement entity persistence logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        pass
+
+    def _update(self, conn: Connection, entity: TEntity) -> None:
+        """Update an existing entity in the database."""
+        # Implement entity update logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        pass
+
+    def _delete(self, conn: Connection, id: TIdEntity) -> None:
+        """Delete an entity from the database."""
+        # Implement entity deletion logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        pass
+
+    def get(self, id: TIdEntity) -> TEntity:
+        """Get an entity by its ID."""
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            entity = self._get(conn, id)
+        if entity is None:
+            raise AggregateNotFound(f"Entity with id {id} not found")
+        return entity
+
+    def save(self, entity: TEntity):
+        """Save an entity to the repository."""
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            existing = self._get(conn, entity.id)
+            if existing is None:
+                self._insert(conn, entity)
+            else:
+                self._update(conn, entity)
+
+    def delete(self, id: TIdEntity) -> TEntity:
+        """Delete an entity from the repository."""
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            entity = self._get(conn, id)
+            if entity is None:
+                raise AggregateNotFound(f"Entity with id {id} not found")
+            self._delete(conn, id)
+        return entity
+
 
 class SQLAlchemyRepositoryAdapter(
     BaseAggregateRepositoryAdapter[
