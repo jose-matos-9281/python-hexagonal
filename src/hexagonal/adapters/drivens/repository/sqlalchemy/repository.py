@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from abc import abstractmethod
 from typing import Any, ClassVar, Dict, Mapping, Sequence, Tuple, cast
 from uuid import UUID
 
@@ -14,6 +15,7 @@ from sqlalchemy import Connection, delete, insert, select, update
 from hexagonal.adapters.drivens.repository.base import (
     BaseAggregateRepositoryAdapter,
     BaseEntityRepositoryAdapter,
+    BaseSearchRepositoryAdapter,
 )
 from hexagonal.domain import (
     AggregateNotFound,
@@ -23,6 +25,8 @@ from hexagonal.domain import (
     TAggregate,
     TEntity,
     TIdEntity,
+    TQuery,
+    TView,
 )
 
 from .datastore import SQLAlchemyConnectionContextManager
@@ -399,3 +403,40 @@ class SQLAlchemyRepositoryAdapter(
             self._save_event_history(conn, events)
             self._delete(conn, id)
         return agg
+
+
+class SQLAlchemySearchRepositoryAdapter(
+    BaseSearchRepositoryAdapter[SQLAlchemyConnectionContextManager, TQuery, TView]
+):
+    """SQLAlchemy repository adapter for search queries.
+
+    This adapter implements the ISearchRepository interface using SQLAlchemy
+    as the backing store. It handles executing search queries and returning
+    results in a view format.
+
+    Supports multiple database backends (PostgreSQL, MySQL, SQLite) through
+    SQLAlchemy's abstraction layer.
+
+    Args:
+        mapper: Mapper for converting between domain and persistence models
+        connection_manager: SQLAlchemy connection context manager
+    """
+
+    @abstractmethod
+    def _search(self, conn: Connection, query: TQuery) -> Sequence[TView]: ...
+
+    def search(self, query: TQuery) -> Sequence[TView]:
+        """Execute a search query against the repository.
+
+        Args:
+            query: The search query to execute
+
+        Returns:
+            A sequence of view objects matching the query criteria
+
+        Raises:
+            RuntimeError: If not attached to a unit of work
+        """
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            return self._search(conn, query)

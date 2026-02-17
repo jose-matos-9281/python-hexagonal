@@ -14,11 +14,12 @@ from eventsourcing.persistence import Mapper
 from eventsourcing.utils import Environment
 
 from hexagonal.application import Infrastructure
-from hexagonal.domain import TAggregate, TEntity, TIdEntity
+from hexagonal.domain import TAggregate, TEntity, TIdEntity, TQuery, TView
 from hexagonal.ports.drivens import (
     IAggregateRepository,
     IBaseRepository,
     IEntityRepository,
+    ISearchRepository,
     IUnitOfWork,
     TManager,
 )
@@ -106,3 +107,9 @@ class BaseEntityRepositoryAdapter(
     @property
     def entity_name(self) -> str:
         return self._type_of_entity.__name__
+
+
+class BaseSearchRepositoryAdapter(
+    BaseRepositoryAdapter[TManager],
+    ISearchRepository[TManager, TQuery, TView],
+): ...

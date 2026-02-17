@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Generic, List, Self, TypeVar
+from typing import Any, Generic, Self, Sequence, TypeVar
 from uuid import UUID
 
 from hexagonal.domain import (
@@ -156,7 +156,7 @@ class IInboxRepository(IBaseRepository[TManager]):
 
 class ISearchRepository(IBaseRepository[TManager], Generic[TManager, TQuery, TView]):
     @abstractmethod
-    def search(self, query: TQuery) -> List[TView]:
+    def search(self, query: TQuery) -> Sequence[TView]:
         """Buscar objetos de valor según el query proporcionado."""
         ...
 
@@ -169,3 +169,6 @@ class IPairInboxOutbox(IBaseInfrastructure, Generic[TManager]):
     @property
     @abstractmethod
     def outbox(self) -> IOutboxRepository[TManager]: ...
+
+
+TRepository = TypeVar("TRepository", bound=IBaseRepository[Any])

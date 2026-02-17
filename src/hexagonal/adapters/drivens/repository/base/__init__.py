@@ -2,6 +2,7 @@ from .repository import (
     BaseAggregateRepositoryAdapter,
     BaseEntityRepositoryAdapter,
     BaseRepositoryAdapter,
+    BaseSearchRepositoryAdapter,
 )
 from .unit_of_work import BaseUnitOfWork
 
@@ -10,4 +11,5 @@ __all__ = [
     "BaseAggregateRepositoryAdapter",
     "BaseUnitOfWork",
     "BaseEntityRepositoryAdapter",
+    "BaseSearchRepositoryAdapter",
 ]

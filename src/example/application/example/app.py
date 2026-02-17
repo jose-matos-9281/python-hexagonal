@@ -1,8 +1,8 @@
 from example.ports.drivens import IExampleRepository
 from hexagonal.application import (
     ComposableBusApp,
-    GetByIdHandler,
 )
+from hexagonal.application.query import GetAggregateByIdHandler
 from hexagonal.ports.drivens import (
     ICommandBus,
     IEventBus,
@@ -65,5 +65,5 @@ class ExampleBusApp(ComposableBusApp[TManager]):
         )
 
         query_bus.register_handler(
-            GetExampleById, GetByIdHandler.from_repo(self.repository)
+            GetExampleById, GetAggregateByIdHandler(self.repository)
         )

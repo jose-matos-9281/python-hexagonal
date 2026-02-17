@@ -2,7 +2,7 @@
 from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar
 from uuid import UUID
 
-from hexagonal.domain import CloudMessage, Query, TCommand, TEvento
+from hexagonal.domain import CloudMessage, QueryOne, TCommand, TEvento
 from hexagonal.ports.drivens import TAggregate
 from hexagonal.ports.drivers import IBaseApplication
 
@@ -54,8 +54,8 @@ class BaseAPI(Generic[TBaseApp]):
     def _get_aggregate(
         self,
         id: UUID,
-        query_type: Type[Query[AggregateView[TAggregate]]],
+        query_type: Type[QueryOne[AggregateView[TAggregate]]],
         **kwargs: Any,
     ) -> TAggregate:
         query = query_type.new(id, **kwargs)
-        return self.app.query_bus.get(query, one=True).item.value
+        return self.app.query_bus.get(query).item.value

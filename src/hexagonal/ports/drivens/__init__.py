@@ -19,6 +19,7 @@ from .repository import (
     IUnitOfWork,
     TAggregate,
     TManager,
+    TRepository,
 )
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "TAggregate",
     "IPairInboxOutbox",
     "IEntityRepository",
+    "TRepository",
 ]
