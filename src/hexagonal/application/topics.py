@@ -10,7 +10,11 @@ TRegistableTopics = Tuple[str, SupportsTopic] | Type[HasTopic] | Type["RegisterT
 class RegisterTopics:
     topics: list[TRegistableTopics | "RegisterTopics"] = []
 
-    def __init__(self, *topics: TRegistableTopics | "RegisterTopics"):
+    def __init__(
+        self, *topics: TRegistableTopics | "RegisterTopics", clear: bool = True
+    ):
+        if clear:
+            self.topics.clear()
         self.topics += list(topics)
 
     def __call__(self):
