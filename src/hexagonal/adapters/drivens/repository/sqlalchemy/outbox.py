@@ -313,7 +313,7 @@ class SQLAlchemyInboxRepository(
 
     def _cursor(self):
         """Get the current connection for executing statements."""
-        return self._connection_manager.cursor()
+        return self.connection_manager.cursor()
 
     def create_tables(self) -> None:
         """Create the inbox table if it doesn't exist."""

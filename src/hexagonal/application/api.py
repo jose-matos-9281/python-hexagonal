@@ -1,4 +1,5 @@
 # mypy: disable-error-code="misc"
+import time
 from enum import Enum
 from typing import (
     Any,
@@ -7,15 +8,16 @@ from typing import (
     List,
     Literal,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     overload,
 )
 from uuid import UUID
 
+from eventsourcing.utils import SupportsTopic, get_topic, register_topic
 from pydantic import Field
 
-from hexagonal.application.topics import RegisterTopics
 from hexagonal.domain import (
     CloudMessage,
     Command,
@@ -60,31 +62,57 @@ class ApiCommandResponse(Inmutable, Generic[TCommand]):
         return event
 
 
+class ApiEventResponse(Inmutable):
+    evento: CloudMessage[TEvento]
+    events: Dict[Type[TEvento], TEvento | None] = Field(default_factory=lambda: {})
+    has_events: bool = True
+
+    @overload
+    def get(
+        self, event_type: Type[TEvent], *, raise_error: Literal[True] = True
+    ) -> TEvent: ...
+
+    @overload
+    def get(
+        self, event_type: Type[TEvent], *, raise_error: Literal[False]
+    ) -> Optional[TEvent]: ...
+
+    def get(
+        self, event_type: Type[TEvent], *, raise_error: bool = True
+    ) -> Optional[TEvent]:
+        event = self.events.get(event_type)  # type: ignore
+        if event is None and raise_error:
+            raise KeyError(f"Event {event_type} not found in response")
+        elif not isinstance(event, event_type):
+            raise TypeError(f"Event {event_type} is not of type {event_type}")
+        return event
+
+
 class BaseAPI(Generic[TBaseApp]):
     class Events(Enum):
         @classmethod
-        def get_topics(cls) -> list[Type[TEvento]]:
-            topics: list[Type[TEvento]] = []
+        def get_topics(cls) -> list[Tuple[str, SupportsTopic]]:
+            topics: list[Tuple[str, SupportsTopic]] = []
             for topic in cls:
                 if issubclass(topic.value, TEvento):
-                    topics.append(topic.value)
-                elif issubclass(topic.value, cls):
+                    topics.append((topic.value.TOPIC, topic.value))
+                elif issubclass(topic.value, BaseAPI.Events):
                     topics.extend(topic.value.get_topics())
                 else:
-                    continue
+                    topics.append((get_topic(topic.value), topic.value))
             return topics
 
     class Commands(Enum):
         @classmethod
-        def get_topics(cls) -> list[Type[Command]]:
-            topics: list[Type[Command]] = []
+        def get_topics(cls) -> list[Tuple[str, SupportsTopic]]:
+            topics: list[Tuple[str, SupportsTopic]] = []
             for topic in cls:
                 if issubclass(topic.value, Command):
-                    topics.append(topic.value)
-                elif issubclass(topic.value, cls):
+                    topics.append((topic.value.TOPIC, topic.value))
+                elif issubclass(topic.value, BaseAPI.Commands):
                     topics.extend(topic.value.get_topics())
                 else:
-                    continue
+                    topics.append((get_topic(topic.value), topic.value))
             return topics
 
     class Queries(Enum): ...
@@ -94,8 +122,8 @@ class BaseAPI(Generic[TBaseApp]):
         self.topics = self.Events.get_topics() + self.Commands.get_topics()
 
     def register_topics(self):
-        register = RegisterTopics(*self.topics)
-        register.apply()
+        for topic_name, topic in self.topics:
+            register_topic(topic_name, topic)
 
     @property
     def app(self) -> TBaseApp:
@@ -119,7 +147,7 @@ class BaseAPI(Generic[TBaseApp]):
         tracked_events: set[Type[TEvento]] = set()
         events = events or []
         default_events = default_events or []
-        tracked_events.union(events + default_events)
+        tracked_events.update(events + default_events)
         awaited: Dict[Type[TEvento], GetEvent[TEvento]] = {
             e: GetEvent[e]()  # type: ignore
             for e in tracked_events
@@ -141,3 +169,42 @@ class BaseAPI(Generic[TBaseApp]):
     ) -> TAggregate:
         query = query_type.new(id, **kwargs)
         return self.app.query_bus.get(query).item.value
+
+    def publish_and_wait(
+        self,
+        event: TEvento,
+        wait: float | None = None,
+        *,
+        events: Optional[List[Type[TEvento]]] = None,
+        default_events: Optional[List[Type[TEvento]]] = None,
+        to_outbox: bool = True,
+        **kwargs: Any,
+    ) -> ApiEventResponse:
+        """Publish an event and optionally await other events before returning."""
+        cloud_message = CloudMessage[type(event)].new(event, **kwargs)
+
+        tracked_events: set[Type[TEvento]] = set()
+        events = events or []
+        default_events = default_events or []
+        tracked_events.update(events + default_events)
+        awaited: Dict[Type[TEvento], GetEvent[TEvento]] = {
+            e: GetEvent[e]()  # type: ignore
+            for e in tracked_events
+        }
+        for e, handler in awaited.items():
+            self.app.event_bus.wait_for_publish(e, handler)
+
+        if to_outbox:
+            self.app.bus_app.uow.attach_repo(self.app.event_bus.outbox_repository)
+            with self.app.bus_app.uow:
+                self.app.event_bus.outbox_repository.save(cloud_message)
+            self.app.event_bus.publish_from_outbox()
+        else:
+            self.app.event_bus.publish(cloud_message)
+
+        if wait is not None:
+            time.sleep(wait)
+        return ApiEventResponse(
+            evento=cloud_message,
+            events={event: wrapper.event for event, wrapper in awaited.items()},
+        )

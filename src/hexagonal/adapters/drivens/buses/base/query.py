@@ -83,7 +83,7 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
         if not handler:
             raise HandlerNotRegistered(f"Query: {name}")
         results = handler.get(query)
-        if not (one and isinstance(query, QueryOne)):
+        if not (one or isinstance(query, QueryOne)):
             return results
         if len(results) == 0:
             raise ValueError("No results found")

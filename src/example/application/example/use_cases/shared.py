@@ -3,7 +3,7 @@ from typing import Any, Self, TypeVar
 
 from example.domain.example import ExampleId, ExampleState
 from example.ports.drivens import IExampleRepository
-from hexagonal.application import CommandHandler
+from hexagonal.application import CommandHandlerBase
 from hexagonal.domain import Command, DomainEvent, IntegrationEvent
 
 
@@ -37,4 +37,4 @@ class ExampleSnapshot(ExampleIntegrationEvent, topic_suffix="Snapshot"):
 T = TypeVar("T", bound=ExampleCommand)
 
 
-class ExampleCommandHandler(CommandHandler[T, IExampleRepository[Any]]): ...
+class ExampleCommandHandler(CommandHandlerBase[T, IExampleRepository[Any]]): ...

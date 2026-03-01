@@ -19,7 +19,7 @@ metadata = MetaData()
 
 def _get_table_key(table_name: str, schema: str | None = None) -> str:
     """Get the key used by SQLAlchemy metadata to store the table."""
-    if schema:
+    if schema and schema != "":
         return f"{schema}.{table_name}"
     return table_name
 
@@ -34,6 +34,7 @@ def create_aggregates_table(table_name: str, schema: str | None = None) -> Table
     Returns:
         SQLAlchemy Table object for aggregate snapshots
     """
+    schema = schema if schema and schema != "" else None
     full_table_name = f"aggregates_{table_name}"
     table_key = _get_table_key(full_table_name, schema)
 
@@ -66,6 +67,7 @@ def create_events_table(table_name: str, schema: str | None = None) -> Table:
     Returns:
         SQLAlchemy Table object for aggregate events history
     """
+    schema = schema if schema and schema != "" else None
     full_table_name = f"aggregates_{table_name}_events"
     table_key = _get_table_key(full_table_name, schema)
 
@@ -97,6 +99,7 @@ def create_outbox_table(table_name: str = "outbox", schema: str | None = None) -
     Returns:
         SQLAlchemy Table object for outbox messages
     """
+    schema = schema if schema and schema != "" else None
     table_key = _get_table_key(table_name, schema)
 
     # Return existing table if already defined
@@ -134,6 +137,7 @@ def create_inbox_table(table_name: str = "inbox", schema: str | None = None) -> 
     Returns:
         SQLAlchemy Table object for inbox messages
     """
+    schema = schema if schema and schema != "" else None
     table_key = _get_table_key(table_name, schema)
 
     # Return existing table if already defined

@@ -5,6 +5,8 @@ import threading
 from queue import Empty, Queue
 from typing import Mapping
 
+from eventsourcing.utils import strtobool
+
 from hexagonal.adapters.drivens.buses.base import BaseEventBus
 from hexagonal.domain import CloudMessage, TEvent, TEvento
 from hexagonal.ports.drivens import TManager
@@ -28,7 +30,8 @@ class InMemoryQueueEventBus(BaseEventBus[TManager]):
     def initialize(self, env: Mapping[str, str]) -> None:
         self.queue: Queue[CloudMessage[TEvento]] = Queue()  # o Queue(maxsize=...)
         self._stop = threading.Event()
-        self._worker = threading.Thread(target=self._worker_loop, daemon=True)
+        daemon = strtobool(env.get("EVENT_BUS_WORKER_DAEMON", "true"))
+        self._worker = threading.Thread(target=self._worker_loop, daemon=daemon)
 
         super().initialize(env)
 
@@ -41,8 +44,8 @@ class InMemoryQueueEventBus(BaseEventBus[TManager]):
         return self._publish_messages(*events)
 
     def _publish_message(self, message: CloudMessage[TEvento]) -> None:
-        super()._publish_message(message)
         self.verify()
+        super()._publish_message(message)
         self.queue.put(message)
         # No llamamos consume() aquí: el worker se encarga.
 
