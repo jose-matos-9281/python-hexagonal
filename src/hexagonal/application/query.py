@@ -37,7 +37,7 @@ class SearchAggregateRepository(
         self, query: GetById[TAggregate | TEntity, TIdEntity]
     ) -> List[AggregateView[TAggregate | TEntity]]:
         aggregate = self._repo.get(query.id)
-        return [AggregateView[TAggregate | TEntity].new(aggregate)]
+        return [AggregateView[type(aggregate)].new(aggregate)]
 
     ## decorate methods from IAggregateRepository to pass through initialization ##
     def initialize(self, env: Mapping[str, str]) -> None:
