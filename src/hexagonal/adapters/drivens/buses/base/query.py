@@ -22,7 +22,13 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
 
     def initialize(self, env: Mapping[str, str]) -> None:
         self.handlers = {}
+        self._read_scope_runner = None
         super().initialize(env)
+
+    def configure_read_scope_runtime(
+        self, read_scope_runner: Any | None = None
+    ) -> None:
+        self._read_scope_runner = read_scope_runner
 
     def _get_name(self, query_type: Type[QueryBase[TView]]) -> str:
         return get_topic(query_type)

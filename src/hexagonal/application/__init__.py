@@ -8,6 +8,8 @@ from .handlers import (
     EventHandlerBase,
     MessageHandler,
     QueryHandler,
+    ScopedMessageHandlerProvider,
+    ScopedQueryHandlerProvider,
 )
 from .infrastructure import (
     ComposableInfrastructure,
@@ -35,6 +37,8 @@ __all__ = [
     "EventHandler",
     "MessageHandler",
     "QueryHandler",
+    "ScopedMessageHandlerProvider",
+    "ScopedQueryHandlerProvider",
     "ComposableInfrastructure",
     "Infrastructure",
     "InfrastructureGroup",

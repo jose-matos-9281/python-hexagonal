@@ -195,9 +195,7 @@ class BaseAPI(Generic[TBaseApp]):
             self.app.event_bus.wait_for_publish(e, handler)
 
         if to_outbox:
-            self.app.bus_app.uow.attach_repo(self.app.event_bus.outbox_repository)
-            with self.app.bus_app.uow:
-                self.app.event_bus.outbox_repository.save(cloud_message)
+            self.app.event_bus.save_to_outbox(cloud_message)
             self.app.event_bus.publish_from_outbox()
         else:
             self.app.event_bus.publish(cloud_message)

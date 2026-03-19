@@ -61,7 +61,7 @@ class BaseCommandBus(ICommandBus[TManager], MessageBus[TManager]):
             else CloudMessage[command.__class__].new(command)  # type: ignore
         )
         if to_outbox:
-            self.outbox_repository.save(cmd)
+            self.save_to_outbox(cmd)
         else:
             self.process_command(cmd)
 

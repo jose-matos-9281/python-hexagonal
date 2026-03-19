@@ -52,6 +52,9 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
     def _get_key(self, obj: Type[TEvent] | IMessageHandler[TEvent]) -> str:
         if not isinstance(obj, IMessageHandler):
             return get_topic(obj)
+        handler_key = getattr(obj, "handler_key", None)
+        if isinstance(handler_key, str):
+            return handler_key
         try:
             return get_topic(obj.__class__)
         except TopicError as e:

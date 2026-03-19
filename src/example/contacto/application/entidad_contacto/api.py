@@ -1,9 +1,12 @@
 from typing import Any, List, Optional, Type
 from uuid import UUID
 
-from example.contacto.domain.entidad_contacto import ValidacionEntidadContacto
+from example.contacto.domain.entidad_contacto import (
+    EntidadExampletate,
+    ValidacionEntidadContacto,
+)
 from hexagonal.application.api import BaseAPI, TBaseApp
-from hexagonal.domain import TEvento
+from hexagonal.domain import AggregateSnapshot, TEvento
 
 from .use_cases import (
     CrearEntidadContacto,
@@ -22,6 +25,7 @@ class EntidadContactoAPI(BaseAPI[TBaseApp]):
         CREADO = EntidadContactoCreado
         CORRESPONDE = EntidadContactoCorresponde
         NO_CORRESPONDE = EntidadContactoNoCorresponde
+        AGGREGATE = AggregateSnapshot[EntidadExampletate]
 
     class Commands(BaseAPI.Commands):
         CREAR = CrearEntidadContacto

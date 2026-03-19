@@ -213,6 +213,9 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
         )
         self._initialized = True
 
+    def create_scoped_manager(self) -> "SQLAlchemyConnectionContextManager":
+        return SQLAlchemyConnectionContextManager(self.datastore)
+
     def start_connection(self):
         """Start a new connection context.
 
@@ -280,7 +283,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
                 self._current_connection = None
                 conn = self.current_connection
             yield conn
-            if commit:
+            if commit and conn.in_transaction():
                 conn.commit()
         except Exception:
             # Reset connection on error

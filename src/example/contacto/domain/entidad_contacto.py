@@ -69,6 +69,11 @@ class EntidadContacto(AggregateRoot[IdEntidadContacto, EntidadExampletate]):
     def create_id(cls, entidad: IdEntidad, contacto: IdContacto, *_, **__: Any):
         return super().create_id(entidad=entidad, contacto=contacto)
 
+    def complete_snapshot_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        super().complete_snapshot_state(state)
+        state["id_entidad_contacto"] = self.value_id
+        return state
+
     def _marcar_validacion(
         self, validacion: ValidacionEntidadContacto, usuario: IdUsuario
     ):

@@ -8,6 +8,7 @@ from .buses import (
 )
 from .infrastructure import IBaseInfrastructure
 from .repository import (
+    ExecutionScope,
     IAggregateRepository,
     IBaseRepository,
     IConnectionManager,
@@ -15,11 +16,18 @@ from .repository import (
     IInboxRepository,
     IOutboxRepository,
     IPairInboxOutbox,
+    IReadScopeFactory,
+    IReadScopeRunner,
     ISearchRepository,
     IUnitOfWork,
+    IWriteScopeFactory,
+    IWriteScopeRunner,
     TAggregate,
     TManager,
+    TReadScope,
     TRepository,
+    TResult,
+    TWriteScope,
 )
 
 __all__ = [
@@ -29,6 +37,7 @@ __all__ = [
     "IEventBus",
     "IQueryBus",
     "IBusInfrastructure",
+    "ExecutionScope",
     "IInboxRepository",
     "IOutboxRepository",
     "IAggregateRepository",
@@ -36,6 +45,10 @@ __all__ = [
     "ISearchRepository",
     "IConnectionManager",
     "IUnitOfWork",
+    "IWriteScopeFactory",
+    "IReadScopeFactory",
+    "IWriteScopeRunner",
+    "IReadScopeRunner",
     "IMessageHandler",
     "IQueryHandler",
     "TManager",
@@ -44,4 +57,7 @@ __all__ = [
     "IPairInboxOutbox",
     "IEntityRepository",
     "TRepository",
+    "TResult",
+    "TWriteScope",
+    "TReadScope",
 ]

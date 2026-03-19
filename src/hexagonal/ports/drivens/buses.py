@@ -1,7 +1,7 @@
 import threading
 from abc import ABC, abstractmethod
 from asyncio import Event
-from typing import Callable, Generic, Literal, Type, overload
+from typing import Any, Callable, Generic, Literal, Type, overload
 
 from hexagonal.domain import (
     CloudMessage,
@@ -32,6 +32,22 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
     @abstractmethod
     def publish_from_outbox(self, limit: int | None = None):
         """Publicar mensajes desde la outbox., hasta el límite especificado."""
+        ...
+
+    @abstractmethod
+    def save_to_outbox(self, *messages: CloudMessage[Any]) -> None:
+        """Guardar mensajes en la outbox usando el scope activo si existe."""
+        ...
+
+    @abstractmethod
+    def configure_scope_runtime(
+        self,
+        *,
+        write_scope_runner: Any | None = None,
+        outbox_repository_getter: Callable[[Any], IOutboxRepository[TManager]]
+        | None = None,
+    ) -> None:
+        """Configurar acceso a repositorios scope-aware para outbox."""
         ...
 
     @abstractmethod
@@ -109,6 +125,11 @@ class IEventBus(IBaseMessageBus[TManager], ABC):
 
 
 class IQueryBus(IBaseInfrastructure, Generic[TManager]):
+    @abstractmethod
+    def configure_read_scope_runtime(
+        self, read_scope_runner: Any | None = None
+    ) -> None: ...
+
     @abstractmethod
     def register_handler(
         self,

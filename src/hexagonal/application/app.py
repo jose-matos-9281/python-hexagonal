@@ -30,10 +30,6 @@ class Application(IBaseApplication[TManager]):
         bus_infrastructure.verify()
         self._bus_infrastructure = bus_infrastructure
         self._bus_app = bus_app
-        self._bus_app.uow.attach_repo(self.event_bus.inbox_repository)
-        self._bus_app.uow.attach_repo(self.event_bus.outbox_repository)
-        self._bus_app.uow.attach_repo(self.command_bus.inbox_repository)
-        self._bus_app.uow.attach_repo(self.command_bus.outbox_repository)
         self.bootstrap(self._bus_app)
 
     @property

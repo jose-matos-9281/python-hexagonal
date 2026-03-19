@@ -1,5 +1,6 @@
+from example.app.ports.drivens import IexampleInfrastructure
 from example.contacto.ports.drivens import IContactoRepository
-from hexagonal.application import ComposableBusApp
+from hexagonal.application import ComposableBusApp, ScopedMessageHandlerProvider
 from hexagonal.ports.drivens import (
     ICommandBus,
     IEventBus,
@@ -28,10 +29,10 @@ class IntegrationContactoBusApp(ComposableBusApp[TManager]):
     def __init__(
         self,
         uow: IUnitOfWork[TManager],
-        repository: IContactoRepository[TManager],
+        scope_provider: IexampleInfrastructure[TManager],
     ):
         self._uow = uow
-        self.repository: IContactoRepository[TManager] = repository
+        self.scope_provider = scope_provider
 
     @property
     def uow(self) -> IUnitOfWork[TManager]:
@@ -45,9 +46,12 @@ class IntegrationContactoBusApp(ComposableBusApp[TManager]):
     ) -> None:
         event_bus.subscribe(
             EntidadContactoCorresponde,
-            EntidadContactoCorrespondeHandler(
-                event_bus,
-                self.uow,
-                self.repository,
+            ScopedMessageHandlerProvider(
+                self.scope_provider.write_scope_runner,
+                lambda scope: EntidadContactoCorrespondeHandler(
+                    event_bus,
+                    scope.uow,
+                    scope.contacto_repository,
+                ),
             ),
         )

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Generic, Self, Sequence, TypeVar
+from dataclasses import dataclass
+from typing import Any, Callable, Generic, Mapping, Protocol, Self, Sequence, TypeVar
 from uuid import UUID
 
 from hexagonal.domain import (
@@ -22,6 +23,31 @@ class IConnectionManager(IBaseInfrastructure, ABC):
 
 
 TManager = TypeVar("TManager", bound=IConnectionManager)
+TResult = TypeVar("TResult")
+TReadScope = TypeVar("TReadScope")
+TWriteScope = TypeVar("TWriteScope")
+
+
+@dataclass(frozen=True)
+class ExecutionScope(Generic[TManager]):
+    uow: "IUnitOfWork[TManager]"
+    repositories: Mapping[str, object]
+
+
+class IWriteScopeFactory(Protocol, Generic[TWriteScope]):
+    def create_write_scope(self) -> TWriteScope: ...
+
+
+class IReadScopeFactory(Protocol, Generic[TReadScope]):
+    def create_read_scope(self) -> TReadScope: ...
+
+
+class IWriteScopeRunner(Protocol, Generic[TWriteScope]):
+    def run_in_write_scope(self, work: Callable[[TWriteScope], TResult]) -> TResult: ...
+
+
+class IReadScopeRunner(Protocol, Generic[TReadScope]):
+    def run_in_read_scope(self, work: Callable[[TReadScope], TResult]) -> TResult: ...
 
 
 class IBaseRepository(IBaseInfrastructure, Generic[TManager]):
@@ -30,9 +56,13 @@ class IBaseRepository(IBaseInfrastructure, Generic[TManager]):
     def connection_manager(self) -> TManager: ...
 
     @abstractmethod
+    # Compatibility shim for legacy singleton-UoW wiring. New scope-based flows
+    # construct repositories with the correct manager and should not rely on this.
     def attach_to_unit_of_work(self, uow: "IUnitOfWork[TManager]") -> None: ...
 
     @abstractmethod
+    # Compatibility shim paired with attach_to_unit_of_work(); remove once Phase 5
+    # eliminates legacy mutable attachment paths.
     def detach_from_unit_of_work(self) -> None: ...
 
 
@@ -48,9 +78,11 @@ class IUnitOfWork(IBaseInfrastructure, ABC, Generic[TManager]):
     def rollback(self) -> None: ...
 
     @abstractmethod
+    # Compatibility shim for legacy registration paths only.
     def attach_repo(self, repo: IBaseRepository[TManager]) -> None: ...
 
     @abstractmethod
+    # Compatibility shim for legacy registration paths only.
     def detach_repo(self, repo: IBaseRepository[TManager]) -> None: ...
 
     def __enter__(self) -> Self:

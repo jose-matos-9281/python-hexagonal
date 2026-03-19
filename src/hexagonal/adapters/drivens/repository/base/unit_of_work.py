@@ -20,6 +20,7 @@ class BaseUnitOfWork(IUnitOfWork[TManager], InfrastructureGroup):
     def initialize(self, env: Mapping[str, str]) -> None:
         self._initialized = True
         self._active = False
+        self._attached_repositories: list[IBaseRepository[TManager]] = []
         return super().initialize(env)
 
     @property
@@ -32,8 +33,13 @@ class BaseUnitOfWork(IUnitOfWork[TManager], InfrastructureGroup):
             return
 
         self._repositories[topic] = repo
-        if self.initialized and self._active:
+        if (
+            self.initialized
+            and self._active
+            and repo.connection_manager is not self._manager
+        ):
             repo.attach_to_unit_of_work(self)
+            self._attached_repositories.append(repo)
 
     def detach_repo(self, repo: IBaseRepository[TManager]) -> None:
         topic = get_topic(repo.__class__)
@@ -54,8 +60,12 @@ class BaseUnitOfWork(IUnitOfWork[TManager], InfrastructureGroup):
             return self
         # get connection from manager, the connection is entered yet
         self._ctx = self._manager.start_connection()
+        self._attached_repositories = []
         for repo in self._repositories.values():
+            if repo.connection_manager is self._manager:
+                continue
             repo.attach_to_unit_of_work(self)
+            self._attached_repositories.append(repo)
         self._active = True
         return self
 
@@ -70,6 +80,6 @@ class BaseUnitOfWork(IUnitOfWork[TManager], InfrastructureGroup):
             # Log or handle commit/rollback errors
             raise RuntimeError(f"Failed to finalize transaction: {e}") from e
         finally:
-            for repo in self._repositories.values():
+            for repo in self._attached_repositories:
                 repo.detach_from_unit_of_work()
             self._ctx.__exit__(exc_type, exc_val, exc_tb)  # type: ignore

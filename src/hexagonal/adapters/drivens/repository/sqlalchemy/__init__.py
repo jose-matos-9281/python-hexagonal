@@ -6,7 +6,7 @@ backends (PostgreSQL, MySQL, SQLite) through SQLAlchemy's abstraction layer.
 """
 
 from .datastore import SQLAlchemyConnectionContextManager, SQLAlchemyDatastore
-from .infrastructure import SQLAlchemyInfrastructure
+from .infrastructure import SQLAlchemyInfrastructure, SQLAlchemyScopeRunner
 from .outbox import (
     SQLAlchemyInboxRepository,
     SQLAlchemyOutboxRepository,
@@ -27,6 +27,7 @@ __all__ = [
     "SQLAlchemyOutboxRepository",
     "SQLAlchemyInboxRepository",
     "SQLAlchemyInfrastructure",
+    "SQLAlchemyScopeRunner",
     "SQLAlchemyPairInboxOutbox",
     "SQLAlchemyEntityRepositoryAdapter",
     "SQLAlchemySearchRepositoryAdapter",

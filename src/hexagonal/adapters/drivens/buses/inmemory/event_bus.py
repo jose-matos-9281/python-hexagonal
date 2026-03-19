@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class InMemoryEventBus(BaseEventBus[TManager]):
+    def shutdown(self) -> None:
+        return
+
     def _publish_message(self, message: CloudMessage[TEvento]) -> None:
         super()._publish_message(message)
         self._process_messages(message)
