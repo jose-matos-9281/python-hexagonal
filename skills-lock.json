@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "black_ruff_mypy": {
+      "source": "davidcastagnetoa/skills",
+      "sourceType": "github",
+      "computedHash": "4ce951471a8cceb098588a3263caa1ca5204684a0e7db1c96bf9ebb614e3b77b"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
