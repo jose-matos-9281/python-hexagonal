@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "645b891da1edbae76ab79c7b088d4e73397464f8396edaf773c0e01971ce75d6"
+    },
+    "modern-python": {
+      "source": "trailofbits/skills",
+      "sourceType": "github",
+      "computedHash": "cf3f5314887a7726b3a18be574dcb4c753e74ce5105d5496d1f18c802c9e4e77"
+    },
+    "ruff-linting": {
+      "source": "laurigates/claude-plugins",
+      "sourceType": "github",
+      "computedHash": "d1fb6d34d48a645bc5715f91dd5ba176aad87355147e965ad49cfd4a8744d9a7"
+    }
+  }
+}
