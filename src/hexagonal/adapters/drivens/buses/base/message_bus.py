@@ -16,7 +16,7 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
         self,
         inbox_repository: IInboxRepository[TManager],
         outbox_repository: IOutboxRepository[TManager],
-    ):
+    ) -> None:
         self._inbox_repository = inbox_repository
         self._outbox_repository = outbox_repository
         self._write_scope_runner: Any | None = None
@@ -49,19 +49,19 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
             self.outbox_repository.save(*messages)
             return
 
+        outbox_repository_getter = self._outbox_repository_getter
+
         scope = self._write_scope_runner.current_write_scope
         if scope is not None:
-            self._outbox_repository_getter(scope).save(*messages)
+            outbox_repository_getter(scope).save(*messages)
             return
 
         self._write_scope_runner.run_in_write_scope(
-            lambda write_scope: self._outbox_repository_getter(write_scope).save(
-                *messages
-            )
+            lambda write_scope: outbox_repository_getter(write_scope).save(*messages)
         )
 
     # publish
-    def publish_from_outbox(self, limit: int | None = None):
+    def publish_from_outbox(self, limit: int | None = None) -> None:
         self.verify()
         messages = self.outbox_repository.fetch_pending(limit=limit)
         self._publish_messages(*messages)

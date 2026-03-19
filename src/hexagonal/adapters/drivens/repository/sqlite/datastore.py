@@ -2,7 +2,8 @@
 
 import sqlite3
 from contextlib import contextmanager
-from typing import Callable, Iterator, Literal, Mapping, Optional, TypeVar
+from types import TracebackType
+from typing import Any, Callable, Iterator, Literal, Mapping, Optional, TypeVar
 
 from eventsourcing.utils import strtobool
 
@@ -32,7 +33,7 @@ class SQLiteDatastore(Infrastructure):
         cached_statements: int = 128,
         uri: bool = False,
         autocommit: bool = False,
-    ):
+    ) -> None:
         """Initialize SQLite datastore.
 
         Args:
@@ -127,25 +128,30 @@ class SQLiteDatastore(Infrastructure):
             self._connection.close()
             self._connection = None
 
-    def __enter__(self):
+    def __enter__(self) -> "SQLiteDatastore":
         self._connection = self.get_connection().__enter__()
         self._connection.row_factory = sqlite3.Row
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # type: ignore
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.close()
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.close()
 
 
-def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row):
+def dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row) -> dict[str, Any]:
     fields = [column[0] for column in cursor.description]
     return {key: value for key, value in zip(fields, row, strict=False)}
 
 
 class SQLiteConnectionContextManager(IConnectionManager, Infrastructure):
-    def __init__(self, datastore: SQLiteDatastore | None = None):
+    def __init__(self, datastore: SQLiteDatastore | None = None) -> None:
         self._current_connection: sqlite3.Connection | None = None
         self._setted_datastore: bool = datastore is not None
         if datastore is not None:
@@ -168,7 +174,7 @@ class SQLiteConnectionContextManager(IConnectionManager, Infrastructure):
         self.verify()
         return self._datastore
 
-    def start_connection(self):
+    def start_connection(self) -> Any:
         self._ctx_con = self.datastore.get_connection()
         self._current_connection = self._ctx_con.__enter__()
         return self._ctx_con

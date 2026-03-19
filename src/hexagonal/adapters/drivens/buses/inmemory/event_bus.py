@@ -25,7 +25,7 @@ class InMemoryEventBus(BaseEventBus[TManager]):
     def publish(self, *events: CloudMessage[TEvent]) -> None:
         return self._publish_messages(*events)
 
-    def consume(self, limit: int | None = None):
+    def consume(self, limit: int | None = None) -> None:
         pass  # No-op for non-queued bus
 
 
@@ -71,5 +71,5 @@ class InMemoryQueueEventBus(BaseEventBus[TManager]):
             finally:
                 self.queue.task_done()
 
-    def consume(self, limit: int | None = None):
+    def consume(self, limit: int | None = None) -> None:
         self._worker.start()

@@ -43,14 +43,14 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
         self,
         query_type: Type[TQuery],
         handler: IQueryHandler[TManager, TQuery, TView],
-    ):
+    ) -> None:
         self.verify()
         name = self._get_name(query_type)
         if name in self.handlers:
             raise HandlerAlreadyRegistered(f"Query: {name}")
         self.handlers[name] = handler
 
-    def unregister_handler(self, query_type: Type[TQuery]):
+    def unregister_handler(self, query_type: Type[TQuery]) -> None:
         self.verify()
         name = self._get_name(query_type)
         if name in self.handlers:

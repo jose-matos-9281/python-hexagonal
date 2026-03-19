@@ -16,23 +16,23 @@ class BaseBusInfrastructure(IBusInfrastructure[TManager], InfrastructureGroup):
         event_bus: IEventBus[TManager],
         query_bus: IQueryBus[TManager],
         *args: IBaseInfrastructure,
-    ):
+    ) -> None:
         self._command_bus = command_bus
         self._event_bus = event_bus
         self._query_bus = query_bus
         super().__init__(self._command_bus, self._event_bus, self._query_bus, *args)
 
     @property
-    def command_bus(self):
+    def command_bus(self) -> ICommandBus[TManager]:
         self.verify()
         return self._command_bus
 
     @property
-    def event_bus(self):
+    def event_bus(self) -> IEventBus[TManager]:
         self.verify()
         return self._event_bus
 
     @property
-    def query_bus(self):
+    def query_bus(self) -> IQueryBus[TManager]:
         self.verify()
         return self._query_bus

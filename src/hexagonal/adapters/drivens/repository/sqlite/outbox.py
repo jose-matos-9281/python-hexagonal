@@ -202,7 +202,7 @@ class SQLiteOutboxRepository(
                 [(now, str(mid)) for mid in message_ids],
             )
 
-    def cursor(self):
+    def cursor(self) -> Any:
         return self._connection_manager.datastore.transaction(commit=True)
 
     def mark_as_failed(self, *message_ids: UUID, error: str) -> None:
@@ -243,7 +243,7 @@ class SQLiteInboxRepository(
         "CREATE_TABLES": "False",
     }
 
-    def cursor(self):
+    def cursor(self) -> Any:
         return self._connection_manager.datastore.transaction(commit=True)
 
     def __init__(

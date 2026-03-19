@@ -1,7 +1,7 @@
 """SQLAlchemy datastore and connection context manager."""
 
 from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from typing import Any, Optional
 
 from eventsourcing.utils import strtobool
@@ -38,7 +38,7 @@ class SQLAlchemyDatastore:
         pool_recycle: int = 3600,
         pool_pre_ping: bool = True,
         max_overflow: int = 10,
-    ):
+    ) -> None:
         """Initialize SQLAlchemy datastore.
 
         Args:
@@ -142,7 +142,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
     Maintains a current connection reference for transaction coordination.
     """
 
-    def __init__(self, datastore: Optional[SQLAlchemyDatastore] = None):
+    def __init__(self, datastore: Optional[SQLAlchemyDatastore] = None) -> None:
         """Initialize connection context manager.
 
         Args:
@@ -151,7 +151,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
         """
         self._datastore = datastore
         self._current_connection: Optional[Connection] = None
-        self._connection_ctx: Optional[Any] = None
+        self._connection_ctx: Optional[AbstractContextManager[Connection]] = None
         self._initialized = datastore is not None
 
     @property
@@ -216,7 +216,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
     def create_scoped_manager(self) -> "SQLAlchemyConnectionContextManager":
         return SQLAlchemyConnectionContextManager(self.datastore)
 
-    def start_connection(self):
+    def start_connection(self) -> Any:
         """Start a new connection context.
 
         Returns:

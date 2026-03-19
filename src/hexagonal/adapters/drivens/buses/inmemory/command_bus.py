@@ -16,7 +16,7 @@ class InMemoryCommandBus(BaseCommandBus[TManager]):
     def _publish_message(self, message: CloudMessage[TCommand]) -> None:
         return self._process_messages(message)
 
-    def consume(self, limit: int | None = None):
+    def consume(self, limit: int | None = None) -> None:
         return  # No-op for non-queued bus
 
 
@@ -66,5 +66,5 @@ class InMemoryQueueCommandBus(BaseCommandBus[TManager]):
             finally:
                 self.queue.task_done()
 
-    def consume(self, limit: int | None = None):
+    def consume(self, limit: int | None = None) -> None:
         self._worker.start()

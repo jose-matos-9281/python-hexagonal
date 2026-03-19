@@ -30,7 +30,7 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
     def outbox_repository(self) -> IOutboxRepository[TManager]: ...
 
     @abstractmethod
-    def publish_from_outbox(self, limit: int | None = None):
+    def publish_from_outbox(self, limit: int | None = None) -> None:
         """Publicar mensajes desde la outbox., hasta el límite especificado."""
         ...
 
@@ -51,11 +51,11 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
         ...
 
     @abstractmethod
-    def consume(self, limit: int | None = None):
+    def consume(self, limit: int | None = None) -> None:
         """Consumir mensajes desde la inbox, hasta el límite especificado."""
         ...
 
-    async def consume_async(self, shutdown_event: Event | threading.Event): ...
+    async def consume_async(self, shutdown_event: Event | threading.Event) -> None: ...
 
 
 class ICommandBus(IBaseMessageBus[TManager], ABC):
@@ -89,7 +89,9 @@ class ICommandBus(IBaseMessageBus[TManager], ABC):
 
 class IEventBus(IBaseMessageBus[TManager], ABC):
     @abstractmethod
-    def subscribe(self, event_type: Type[TEvent], handler: IMessageHandler[TEvent]):
+    def subscribe(
+        self, event_type: Type[TEvent], handler: IMessageHandler[TEvent]
+    ) -> None:
         """Suscribir un manejador a un tipo de evento."""
         ...
 
@@ -98,7 +100,7 @@ class IEventBus(IBaseMessageBus[TManager], ABC):
         self,
         event_type: Type[TEvent],
         *handlers: IMessageHandler[TEvent],
-    ): ...
+    ) -> None: ...
 
     @abstractmethod
     def publish(self, *events: CloudMessage[TEvent]) -> None:
@@ -135,10 +137,10 @@ class IQueryBus(IBaseInfrastructure, Generic[TManager]):
         self,
         query_type: Type[TQuery],
         handler: IQueryHandler[TManager, TQuery, TView],
-    ): ...
+    ) -> None: ...
 
     @abstractmethod
-    def unregister_handler(self, query_type: Type[Query[TView]]): ...
+    def unregister_handler(self, query_type: Type[Query[TView]]) -> None: ...
 
     @overload
     def get(

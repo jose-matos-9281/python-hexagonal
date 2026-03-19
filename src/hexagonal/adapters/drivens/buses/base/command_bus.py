@@ -1,4 +1,4 @@
-from typing import Any, Mapping, Type
+from typing import Any, Mapping, Type, cast
 
 from eventsourcing.utils import get_topic
 
@@ -36,14 +36,14 @@ class BaseCommandBus(ICommandBus[TManager], MessageBus[TManager]):
 
     def register_handler(
         self, command_type: Type[TCommand], handler: IMessageHandler[TCommand]
-    ):
+    ) -> None:
         self.verify()
         name = self._get_name(command_type)
         if name in self._handlers:
             raise HandlerAlreadyRegistered(f"Command: {name}")
         self._handlers[name] = handler
 
-    def unregister_handler(self, command_type: Type[TCommand]):
+    def unregister_handler(self, command_type: Type[TCommand]) -> None:
         self.verify()
         name = self._get_name(command_type)
         if name in self._handlers:
@@ -58,7 +58,7 @@ class BaseCommandBus(ICommandBus[TManager], MessageBus[TManager]):
         cmd = (
             command
             if not isinstance(command, Command)
-            else CloudMessage[command.__class__].new(command)  # type: ignore
+            else cast(CloudMessage[TCommand], CloudMessage.new(command))
         )
         if to_outbox:
             self.save_to_outbox(cmd)

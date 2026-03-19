@@ -229,7 +229,7 @@ class SQLAlchemyOutboxRepository(
                 )
                 conn.execute(stmt)
 
-    def _cursor(self):
+    def _cursor(self) -> Any:
         """Get the current connection for executing statements."""
         return self._connection_manager.cursor()
 
@@ -311,7 +311,7 @@ class SQLAlchemyInboxRepository(
         if create_tables:
             self.create_tables()
 
-    def _cursor(self):
+    def _cursor(self) -> Any:
         """Get the current connection for executing statements."""
         return self.connection_manager.cursor()
 
