@@ -1,10 +1,9 @@
-from .application import register_topics as register_topics_example
-from .domain import register_topics as register_topics_domain
+from .app.application import exampleAPI, exampleApp
+from .app.entrypoints import exampleBusAppEntrypoint, exampleEntrypoint
 
-
-def register_topics():
-    register_topics_example()
-    register_topics_domain()
-
-
-register_topics()
+__all__ = [
+    "exampleApp",
+    "exampleAPI",
+    "exampleEntrypoint",
+    "exampleBusAppEntrypoint",
+]

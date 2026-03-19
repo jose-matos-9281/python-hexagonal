@@ -1,8 +1,13 @@
 from .aggregate import (
     AggregateRoot,
     AggregateSnapshot,
+    Entity,
+    ExternalId,
     IdValueObject,
     SnapshotState,
+    TAggregate,
+    TAggregateOrEntity,
+    TEntity,
     TIdEntity,
     command,
 )
@@ -16,6 +21,8 @@ from .base import (
     IntegrationEvent,
     Message,
     Query,
+    QueryBase,
+    QueryOne,
     QueryResult,
     QueryResults,
     TCommand,
@@ -38,8 +45,10 @@ from .exceptions import (
     HandlerNotRegistered,
     InfrastructureNotInitialized,
 )
+from .queries import AggregateView, GetById
 
 __all__ = [
+    "ExternalId",
     "AggregateRoot",
     "AggregateSnapshot",
     "IdValueObject",
@@ -74,4 +83,12 @@ __all__ = [
     "InfrastructureNotInitialized",
     "HandlerNotRegistered",
     "SnapshotState",
+    "Entity",
+    "TAggregate",
+    "AggregateView",
+    "GetById",
+    "TAggregateOrEntity",
+    "TEntity",
+    "QueryOne",
+    "QueryBase",
 ]

@@ -1,0 +1,300 @@
+pages:
+  - page_id: readme
+    path: README.md
+    claims:
+      - claim_id: example-is-the-blueprint
+        doc_anchor: the-blueprint-we-actually-trust
+        support_tier: documented
+        concept: example-first adoption path
+        code_evidence:
+          - path: src/example/__init__.py
+            symbols: [exampleAPI, exampleEntrypoint]
+          - path: src/example/app/entrypoints/main.py
+            symbols: [exampleEntrypoint]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: Start from the example app and its use-case tests, not the package root.
+      - claim_id: package-root-is-not-the-entrypoint
+        doc_anchor: supported-path-vs-internals
+        support_tier: internal_or_evidence_only
+        concept: package-root guardrail
+        code_evidence:
+          - path: src/hexagonal/__init__.py
+            symbols: [hello]
+        test_evidence: []
+        notes: The root module does not represent the supported integration surface.
+  - page_id: getting-started-first-app
+    path: docs/getting-started/first-app.md
+    claims:
+      - claim_id: domain-owns-behavior
+        doc_anchor: 1-start-at-the-domain
+        support_tier: documented
+        concept: domain layer responsibilities
+        code_evidence:
+          - path: src/example/contacto/domain/contacto.py
+            symbols: [Contacto, EstadoContacto, GetContactoById]
+        test_evidence:
+          - path: src/tests/use_cases/contacto/test_crear_contacto.py
+            symbols: [TestCrearContacto]
+          - path: src/tests/use_cases/contacto/test_validar_contacto.py
+            symbols: [TestValidarContacto]
+        notes: The example proves state changes and retrieval through domain-driven commands and queries.
+      - claim_id: ports-describe-infrastructure
+        doc_anchor: 2-define-the-contracts-around-the-domain
+        support_tier: documented
+        concept: port boundaries
+        code_evidence:
+          - path: src/example/contacto/ports/drivens.py
+            symbols: [IAppContactoInfrastructure]
+          - path: src/example/contacto/ports/drivers.py
+            symbols: [IContactoApp]
+        test_evidence: []
+        notes: Ports define required collaborators before adapters are chosen.
+      - claim_id: app-composition-uses-bus-app-group
+        doc_anchor: 3-compose-the-application-layer
+        support_tier: documented
+        concept: application composition
+        code_evidence:
+          - path: src/example/contacto/application/app.py
+            symbols: [ContactoApp]
+          - path: src/hexagonal/application/__init__.py
+            symbols: [BusAppGroup]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: Composition is evidenced by the app group used in the test bootstrap.
+      - claim_id: api-wrapper-registers-topics
+        doc_anchor: 4-expose-a-narrow-api-facade
+        support_tier: documented
+        concept: API facade and topic registration
+        code_evidence:
+          - path: src/example/app/application/api.py
+            symbols: [exampleAPI]
+          - path: src/hexagonal/application/api.py
+            symbols: [BaseAPI, register_topics]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: Tests call `register_topics()` before using the wrapper.
+      - claim_id: entrypoint-group-selects-bootstrap
+        doc_anchor: 5-bootstrap-through-entrypoints
+        support_tier: documented
+        concept: environment-driven bootstrap
+        code_evidence:
+          - path: src/example/app/entrypoints/main.py
+            symbols: [Sqlalchemy, exampleEntrypoint]
+          - path: src/example/app/entrypoints/db/sqlalchemy.py
+            symbols: [SQLAlchemyexampleEntrypoint]
+          - path: src/hexagonal/entrypoints/sqlalchemy.py
+            symbols: [SQLAlchemyInfrastructureEntrypoint, SQLAlchemyAppEntrypoint]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: SQLAlchemy is the evidenced bootstrap path today and should stay clearly labeled.
+      - claim_id: use-case-tests-are-the-proof
+        doc_anchor: 6-prove-the-workflow-with-use-case-tests
+        support_tier: documented
+        concept: end-to-end proof baseline
+        code_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        test_evidence:
+          - path: src/tests/use_cases/contacto/test_crear_contacto.py
+            symbols: [TestCrearContacto]
+          - path: src/tests/use_cases/contacto/test_validar_contacto.py
+            symbols: [TestValidarContacto]
+          - path: src/tests/use_cases/contacto/test_marcar_contactado.py
+            symbols: [TestMarcarContactado]
+        notes: Claims about create, validate, and integration-event flows are limited to tested behavior.
+  - page_id: explanation-architecture-from-example
+    path: docs/explanation/architecture-from-example.md
+    claims:
+      - claim_id: domain-defines-behavior-and-vocabulary
+        doc_anchor: domain-defines-behavior-and-vocabulary
+        support_tier: documented
+        concept: domain layer responsibilities
+        code_evidence:
+          - path: src/example/contacto/domain/contacto.py
+            symbols: [Contacto, EstadoContacto, GetContactoById]
+        test_evidence:
+          - path: src/tests/use_cases/contacto/test_crear_contacto.py
+            symbols: [TestCrearContacto]
+          - path: src/tests/use_cases/contacto/test_validar_contacto.py
+            symbols: [TestValidarContacto]
+        notes: The architecture explanation anchors domain behavior in the aggregate and its tested transitions.
+      - claim_id: ports-define-app-needs
+        doc_anchor: ports-define-what-the-application-needs
+        support_tier: documented
+        concept: ports and dependency boundaries
+        code_evidence:
+          - path: src/example/contacto/ports/drivens.py
+            symbols: [IAppContactoInfrastructure]
+          - path: src/example/contacto/ports/drivers.py
+            symbols: [IContactoApp]
+          - path: src/example/app/ports/drivens.py
+            symbols: [IexampleInfrastructure]
+          - path: src/example/app/ports/drivers.py
+            symbols: [IexampleApp]
+        test_evidence: []
+        notes: Ports frame infrastructure and application contracts before concrete adapters are chosen.
+      - claim_id: application-composition-groups-use-cases
+        doc_anchor: application-composition-groups-use-cases-behind-one-app
+        support_tier: documented
+        concept: application composition layers
+        code_evidence:
+          - path: src/example/contacto/application/app.py
+            symbols: [ContactoApp]
+          - path: src/example/app/application/app.py
+            symbols: [exampleApp]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: Composition is evidenced by grouped bus apps created before test bootstrap uses the app.
+      - claim_id: adapters-are-evidence-not-primary-surface
+        doc_anchor: adapters-implement-ports-but-they-are-not-your-first-teaching-surface
+        support_tier: adapter_specific
+        concept: adapters behind the documented boundary
+        code_evidence:
+          - path: src/example/app/adapters/drivens/repository/sqlalchemy.py
+            symbols: [exampleSQLAlchemyInfrastructure]
+          - path: src/example/app/adapters/drivers/proxy_adapters.py
+            symbols: [exampleAppProxyAdapter]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: Adapter files explain the current implementation but are not the first public teaching surface.
+      - claim_id: entrypoints-assemble-the-graph
+        doc_anchor: entrypoints-assemble-the-app-from-environment-and-infrastructure
+        support_tier: documented
+        concept: entrypoint-driven bootstrap
+        code_evidence:
+          - path: src/example/app/entrypoints/main.py
+            symbols: [Sqlalchemy, exampleEntrypoint]
+          - path: src/example/app/entrypoints/db/sqlalchemy.py
+            symbols: [SQLAlchemyexampleEntrypoint]
+          - path: src/example/app/entrypoints/bus/main.py
+            symbols: [BusEntrypointGroupApp]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: Entrypoints and the test bootstrap together define the supported assembly story.
+  - page_id: how-to-bootstrap-sqlalchemy-app
+    path: docs/how-to/bootstrap-sqlalchemy-app.md
+    claims:
+      - claim_id: sqlalchemy-bootstrap-is-current-how-to-path
+        doc_anchor: the-bootstrap-chain
+        support_tier: adapter_specific
+        concept: SQLAlchemy bootstrap sequence
+        code_evidence:
+          - path: src/hexagonal/integrations/sqlalchemy.py
+            symbols: [SQLAlchemyUnitOfWork, SQLAlchemyConnectionContextManager]
+          - path: src/example/app/entrypoints/main.py
+            symbols: [Sqlalchemy, exampleEntrypoint]
+          - path: src/example/app/entrypoints/db/sqlalchemy.py
+            symbols: [SQLAlchemyexampleEntrypoint]
+          - path: src/example/app/adapters/drivens/repository/sqlalchemy.py
+            symbols: [exampleSQLAlchemyInfrastructure]
+          - path: src/example/app/application/app.py
+            symbols: [exampleApp]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: The how-to stays explicit that SQLAlchemy is the evidenced adapter-specific path today.
+      - claim_id: entrypoint-based-bootstrap-should-match-tests
+        doc_anchor: step-6-verify-bootstrap-through-the-same-path-tests-use
+        support_tier: documented
+        concept: parity between production bootstrap and tests
+        code_evidence:
+          - path: src/example/app/entrypoints/main.py
+            symbols: [exampleEntrypoint]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: The recommended bootstrap path is the same one the use-case suites execute.
+  - page_id: how-to-test-use-cases
+    path: docs/how-to/test-use-cases.md
+    claims:
+      - claim_id: base-test-defines-canonical-suite-bootstrap
+        doc_anchor: the-shared-test-bootstrap
+        support_tier: documented
+        concept: shared test bootstrap
+        code_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        test_evidence:
+          - path: src/tests/use_cases/contacto/test_crear_contacto.py
+            symbols: [TestCrearContacto]
+          - path: src/tests/use_cases/contacto/test_validar_contacto.py
+            symbols: [TestValidarContacto]
+          - path: src/tests/use_cases/contacto/test_marcar_contactado.py
+            symbols: [TestMarcarContactado]
+        notes: The how-to is limited to the sequence the current suites actually execute.
+      - claim_id: contacto-suites-prove-business-flows-through-api
+        doc_anchor: how-individual-use-case-suites-are-structured
+        support_tier: documented
+        concept: use-case verification through API facade
+        code_evidence:
+          - path: src/example/app/application/api.py
+            symbols: [exampleAPI]
+        test_evidence:
+          - path: src/tests/use_cases/contacto/test_crear_contacto.py
+            symbols: [TestCrearContacto]
+          - path: src/tests/use_cases/contacto/test_validar_contacto.py
+            symbols: [TestValidarContacto]
+          - path: src/tests/use_cases/contacto/test_marcar_contactado.py
+            symbols: [TestMarcarContactado]
+        notes: Tests exercise business flows via the API wrapper instead of repository internals.
+  - page_id: reference-supported-surface
+    path: docs/reference/supported-surface.md
+    claims:
+      - claim_id: documented-surface-modules
+        doc_anchor: documented
+        support_tier: documented
+        concept: stable adoption modules
+        code_evidence:
+          - path: src/hexagonal/domain/__init__.py
+            symbols: [AggregateRoot, ValueObject, Command]
+          - path: src/hexagonal/application/__init__.py
+            symbols: [BaseAPI, BusAppGroup]
+          - path: src/hexagonal/ports/drivens/__init__.py
+            symbols: [IUnitOfWork, IAggregateRepository]
+          - path: src/hexagonal/ports/drivers/__init__.py
+            symbols: [IBaseApplication, IBusApp]
+          - path: src/hexagonal/entrypoints/__init__.py
+            symbols: [AppEntrypoint, Entrypoint, EntrypointGroup]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: These modules line up with the example's documented adoption path.
+      - claim_id: sqlalchemy-is-adapter-specific
+        doc_anchor: adapter-specific
+        support_tier: adapter_specific
+        concept: SQLAlchemy quickstart boundary
+        code_evidence:
+          - path: src/hexagonal/integrations/sqlalchemy.py
+            symbols: [SQLAlchemyUnitOfWork, SQLAlchemyRepositoryAdapter]
+          - path: src/hexagonal/entrypoints/sqlalchemy.py
+            symbols: [SQLAlchemyInfrastructureEntrypoint, SQLAlchemyAppEntrypoint]
+          - path: src/example/app/entrypoints/db/sqlalchemy.py
+            symbols: [SQLAlchemyexampleEntrypoint]
+        test_evidence:
+          - path: src/tests/use_cases/base.py
+            symbols: [BaseTest]
+        notes: Document the explicit SQLAlchemy namespace as adapter-specific, not as the whole abstraction.
+  - page_id: skill-python-hexagonal-usage
+    path: skills/python-hexagonal-usage/SKILL.md
+    claims:
+      - claim_id: skill-is-diagnostic-not-generative
+        doc_anchor: workflow
+        support_tier: documented
+        concept: companion guidance behavior
+        code_evidence:
+          - path: skills/python-hexagonal-usage/SKILL.md
+            symbols: []
+          - path: skills/python-hexagonal-usage/templates/adoption-report.md
+            symbols: []
+          - path: skills/python-hexagonal-usage/templates/question-capture.md
+            symbols: []
+        test_evidence: []
+        notes: The skill must inspect, map, warn, and guide before any code generation is considered.

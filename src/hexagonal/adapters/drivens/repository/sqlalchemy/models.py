@@ -19,7 +19,7 @@ metadata = MetaData()
 
 def _get_table_key(table_name: str, schema: str | None = None) -> str:
     """Get the key used by SQLAlchemy metadata to store the table."""
-    if schema:
+    if schema and schema != "":
         return f"{schema}.{table_name}"
     return table_name
 
@@ -34,6 +34,7 @@ def create_aggregates_table(table_name: str, schema: str | None = None) -> Table
     Returns:
         SQLAlchemy Table object for aggregate snapshots
     """
+    schema = schema if schema and schema != "" else None
     full_table_name = f"aggregates_{table_name}"
     table_key = _get_table_key(full_table_name, schema)
 
@@ -45,7 +46,7 @@ def create_aggregates_table(table_name: str, schema: str | None = None) -> Table
         full_table_name,
         metadata,
         Column("originator_id", String(36), nullable=False),
-        Column("aggregate_name", Text, nullable=False),
+        Column("aggregate_name", String(255), nullable=False),
         Column("originator_version", Integer, nullable=False),
         Column("topic", Text, nullable=False),
         Column("state", LargeBinary, nullable=False),
@@ -66,6 +67,7 @@ def create_events_table(table_name: str, schema: str | None = None) -> Table:
     Returns:
         SQLAlchemy Table object for aggregate events history
     """
+    schema = schema if schema and schema != "" else None
     full_table_name = f"aggregates_{table_name}_events"
     table_key = _get_table_key(full_table_name, schema)
 
@@ -77,7 +79,7 @@ def create_events_table(table_name: str, schema: str | None = None) -> Table:
         full_table_name,
         metadata,
         Column("originator_id", String(36), nullable=False),
-        Column("aggregate_name", Text, nullable=False),
+        Column("aggregate_name", String(255), nullable=False),
         Column("originator_version", Integer, nullable=False),
         Column("topic", Text, nullable=False),
         Column("state", LargeBinary, nullable=False),
@@ -97,6 +99,7 @@ def create_outbox_table(table_name: str = "outbox", schema: str | None = None) -
     Returns:
         SQLAlchemy Table object for outbox messages
     """
+    schema = schema if schema and schema != "" else None
     table_key = _get_table_key(table_name, schema)
 
     # Return existing table if already defined
@@ -107,7 +110,7 @@ def create_outbox_table(table_name: str = "outbox", schema: str | None = None) -
         table_name,
         metadata,
         Column("message_id", String(36), primary_key=True),
-        Column("topic", Text, nullable=False),
+        Column("topic", String(255), nullable=False),
         Column("message", LargeBinary, nullable=False),
         Column("published_at", DateTime(timezone=True), nullable=True),
         Column("failed_at", DateTime(timezone=True), nullable=True),
@@ -134,6 +137,7 @@ def create_inbox_table(table_name: str = "inbox", schema: str | None = None) -> 
     Returns:
         SQLAlchemy Table object for inbox messages
     """
+    schema = schema if schema and schema != "" else None
     table_key = _get_table_key(table_name, schema)
 
     # Return existing table if already defined
@@ -144,7 +148,7 @@ def create_inbox_table(table_name: str = "inbox", schema: str | None = None) -> 
         table_name,
         metadata,
         Column("message_id", String(36), nullable=False),
-        Column("handler", Text, nullable=False),
+        Column("handler", String(255), nullable=False),
         Column("received_at", DateTime(timezone=True), nullable=False),
         Column("processed_at", DateTime(timezone=True), nullable=True),
         Column("error", Text, nullable=True),

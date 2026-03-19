@@ -1,6 +1,6 @@
 [project]
 name = "python-hexagonal"
-version = "0.1.2"
+version = "0.2.0"
 description = "Framework to build hexagonal architecture applications in Python."
 readme = "README.md"
 authors = [
@@ -28,7 +28,9 @@ fixable = ["I", "E", "F", "B"]
 
 [dependency-groups]
 dev = [
+    "alembic>=1.18.4",
     "pytest>=9.0.2",
+    "python-dotenv>=1.2.2",
 ]
 sqlalchemy = [
     "sqlalchemy>=2.0.45",

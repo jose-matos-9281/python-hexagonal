@@ -1,19 +1,18 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Generic, List, Self, TypeVar
+from typing import Any, Generic, Self, Sequence, TypeVar
 from uuid import UUID
 
 from hexagonal.domain import (
-    AggregateRoot,
     CloudMessage,
+    TAggregate,
+    TEntity,
     TIdEntity,
     TQuery,
     TView,
 )
 
 from .infrastructure import IBaseInfrastructure
-
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
 
 
 class IConnectionManager(IBaseInfrastructure, ABC):
@@ -84,6 +83,26 @@ class IAggregateRepository(
         ...
 
 
+class IEntityRepository(
+    IBaseRepository[TManager],
+    Generic[TManager, TEntity, TIdEntity],
+):
+    @abstractmethod
+    def save(self, entity: TEntity) -> None:
+        """Persistir la entidad en el almacenamiento."""
+        ...
+
+    @abstractmethod
+    def get(self, id: TIdEntity) -> TEntity:
+        """Recuperar la entidad por su ID."""
+        ...
+
+    @abstractmethod
+    def delete(self, id: TIdEntity) -> TEntity:
+        """Eliminar la entidad por su ID."""
+        ...
+
+
 class IOutboxRepository(IBaseRepository[TManager]):
     """Puerto para manejar eventos pendientes de publicar (write-side)."""
 
@@ -137,7 +156,7 @@ class IInboxRepository(IBaseRepository[TManager]):
 
 class ISearchRepository(IBaseRepository[TManager], Generic[TManager, TQuery, TView]):
     @abstractmethod
-    def search(self, query: TQuery) -> List[TView]:
+    def search(self, query: TQuery) -> Sequence[TView]:
         """Buscar objetos de valor según el query proporcionado."""
         ...
 
@@ -150,3 +169,6 @@ class IPairInboxOutbox(IBaseInfrastructure, Generic[TManager]):
     @property
     @abstractmethod
     def outbox(self) -> IOutboxRepository[TManager]: ...
+
+
+TRepository = TypeVar("TRepository", bound=IBaseRepository[Any])

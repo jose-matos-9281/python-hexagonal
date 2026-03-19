@@ -1,12 +1,10 @@
 # pyright: reportMissingTypeStubs=false, reportUnknownArgumentType=false, reportMissingParameterType=none, reportGeneralTypeIssues=none
 
 from typing import (
-    Any,
     ClassVar,
     Dict,
     Mapping,
     Type,
-    TypeVar,
     get_args,
     get_origin,
 )
@@ -16,15 +14,15 @@ from eventsourcing.persistence import Mapper
 from eventsourcing.utils import Environment
 
 from hexagonal.application import Infrastructure
-from hexagonal.domain import AggregateRoot, TIdEntity
+from hexagonal.domain import TAggregate, TEntity, TIdEntity, TQuery, TView
 from hexagonal.ports.drivens import (
     IAggregateRepository,
     IBaseRepository,
+    IEntityRepository,
+    ISearchRepository,
     IUnitOfWork,
     TManager,
 )
-
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
 
 
 class BaseRepositoryAdapter(IBaseRepository[TManager], Infrastructure):
@@ -83,3 +81,35 @@ class BaseAggregateRepositoryAdapter(
     @property
     def aggregate_name(self) -> str:
         return self._type_of_aggregate.__name__
+
+
+class BaseEntityRepositoryAdapter(
+    BaseRepositoryAdapter[TManager],
+    IEntityRepository[TManager, TEntity, TIdEntity],
+):
+    _type_of_entity: Type[TEntity]
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        # Inspect generic base to find the concrete type argument
+        for base in getattr(cls, "__orig_bases__", []):
+            origin = get_origin(base)
+            if origin and issubclass(origin, BaseEntityRepositoryAdapter):
+                args = get_args(base)
+                if args:
+                    cls._type_of_entity = args[0]
+                    cls.NAME = cls._type_of_entity.__name__.upper()
+
+    def __init__(self, mapper: Mapper[UUID], connection_manager: TManager):
+        super().__init__(connection_manager)
+        self._mapper = mapper
+
+    @property
+    def entity_name(self) -> str:
+        return self._type_of_entity.__name__
+
+
+class BaseSearchRepositoryAdapter(
+    BaseRepositoryAdapter[TManager],
+    ISearchRepository[TManager, TQuery, TView],
+): ...

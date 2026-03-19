@@ -123,6 +123,8 @@ class MessageMapper(Mapper[UUID]):
 def default_orjson_value_serializer(obj: Any) -> Any:
     if isinstance(obj, (UUID, Decimal)):
         return str(obj)
+    if isinstance(obj, Inmutable):
+        return obj.model_dump(mode="json")
     raise TypeError
 
 

@@ -1,9 +1,12 @@
+import threading
 from abc import ABC, abstractmethod
+from asyncio import Event
 from typing import Callable, Generic, Literal, Type, overload
 
 from hexagonal.domain import (
     CloudMessage,
     Query,
+    QueryOne,
     QueryResult,
     QueryResults,
     TCommand,
@@ -35,6 +38,8 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
     def consume(self, limit: int | None = None):
         """Consumir mensajes desde la inbox, hasta el límite especificado."""
         ...
+
+    async def consume_async(self, shutdown_event: Event | threading.Event): ...
 
 
 class ICommandBus(IBaseMessageBus[TManager], ABC):
@@ -115,6 +120,14 @@ class IQueryBus(IBaseInfrastructure, Generic[TManager]):
     def unregister_handler(self, query_type: Type[Query[TView]]): ...
 
     @overload
+    def get(
+        self,
+        query: QueryOne[TView],
+        *,
+        one: bool = False,
+    ) -> QueryResult[TView]: ...
+
+    @overload
     def get(self, query: Query[TView], *, one: Literal[True]) -> QueryResult[TView]: ...
 
     @overload
@@ -128,7 +141,7 @@ class IQueryBus(IBaseInfrastructure, Generic[TManager]):
     @abstractmethod
     def get(
         self,
-        query: Query[TView],
+        query: Query[TView] | QueryOne[TView],
         *,
         one: bool = False,
     ) -> QueryResult[TView] | QueryResults[TView]: ...

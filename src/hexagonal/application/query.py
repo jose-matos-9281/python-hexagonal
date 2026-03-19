@@ -1,43 +1,43 @@
-from typing import Any, Generic, List, Mapping, Type
+from typing import Any, Generic, List, Mapping
 
-from hexagonal.application.handlers import QueryHandler
-from hexagonal.domain import Query, TIdEntity, ValueObject
+from hexagonal.domain import (
+    AggregateView,
+    GetById,
+    TAggregate,
+    TEntity,
+    TIdEntity,
+)
 from hexagonal.ports.drivens import (
     IAggregateRepository,
+    IEntityRepository,
     ISearchRepository,
-    TAggregate,
+    IUnitOfWork,
     TManager,
 )
-from hexagonal.ports.drivens.repository import IUnitOfWork
 
-
-class AggregateView(ValueObject[TAggregate]): ...
-
-
-class GetById(Query[AggregateView[TAggregate]], Generic[TAggregate, TIdEntity]):
-    id: TIdEntity
-
-    @classmethod
-    def new(cls, id: TIdEntity, agg_type: Type[TAggregate], *_: Any, **__: Any):
-        return cls(id=id, view=AggregateView[agg_type])  # type: ignore
+from .handlers import QueryHandler
 
 
 class SearchAggregateRepository(
     ISearchRepository[
         TManager,
-        GetById[TAggregate, TIdEntity],
-        AggregateView[TAggregate],
+        GetById[TAggregate | TEntity, TIdEntity],
+        AggregateView[TAggregate | TEntity],
     ],
-    Generic[TManager, TAggregate, TIdEntity],
+    Generic[TManager, TIdEntity, TAggregate, TEntity],
 ):
-    def __init__(self, repo: IAggregateRepository[TManager, TAggregate, TIdEntity]):
+    def __init__(
+        self,
+        repo: IAggregateRepository[TManager, TAggregate, TIdEntity]
+        | IEntityRepository[TManager, TEntity, TIdEntity],
+    ):
         self._repo = repo
 
     def search(
-        self, query: GetById[TAggregate, TIdEntity]
-    ) -> List[AggregateView[TAggregate]]:
+        self, query: GetById[TAggregate | TEntity, TIdEntity]
+    ) -> List[AggregateView[TAggregate | TEntity]]:
         aggregate = self._repo.get(query.id)
-        return [AggregateView[TAggregate].new(aggregate)]
+        return [AggregateView[type(aggregate)].new(aggregate)]
 
     ## decorate methods from IAggregateRepository to pass through initialization ##
     def initialize(self, env: Mapping[str, str]) -> None:
@@ -61,11 +61,25 @@ class SearchAggregateRepository(
 class GetByIdHandler(
     QueryHandler[
         TManager,
-        GetById[TAggregate, TIdEntity],
-        AggregateView[TAggregate],
+        GetById[TAggregate | TEntity, TIdEntity],
+        AggregateView[TAggregate | TEntity],
     ],
-    Generic[TManager, TAggregate, TIdEntity],
+    Generic[TManager, TIdEntity, TAggregate, TEntity],
 ):
-    def __init__(self, agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]):
+    def __init__(
+        self,
+        agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]
+        | IEntityRepository[TManager, TEntity, TIdEntity],
+    ):
         search = SearchAggregateRepository(agg_repo)
         super().__init__(search)
+
+
+class GetAggregateByIdHandler(GetByIdHandler[TManager, TIdEntity, TAggregate, Any]):
+    def __init__(self, agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]):
+        super().__init__(agg_repo)
+
+
+class GetEntityByIdHandler(GetByIdHandler[TManager, TIdEntity, Any, TEntity]):
+    def __init__(self, entity_repo: IEntityRepository[TManager, TEntity, TIdEntity]):
+        super().__init__(entity_repo)

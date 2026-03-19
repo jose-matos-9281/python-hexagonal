@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Iterable
+from typing import Any, Generic, Iterable
 
 from hexagonal.domain import (
     CloudMessage,
@@ -12,20 +12,23 @@ from hexagonal.domain import (
     TView,
 )
 from hexagonal.ports.drivens import (
-    IBaseRepository,
     IEventBus,
     IMessageHandler,
+    IQueryBus,
     IQueryHandler,
     ISearchRepository,
     IUnitOfWork,
     IUseCase,
     TManager,
+    TRepository,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class MessageHandler(IMessageHandler[TMessagePayloadType]):
+class MessageHandler(
+    IMessageHandler[TMessagePayloadType], Generic[TMessagePayloadType, TRepository]
+):
     event_bus: IEventBus[Any]
     uow: IUnitOfWork[Any]
 
@@ -33,12 +36,30 @@ class MessageHandler(IMessageHandler[TMessagePayloadType]):
         self,
         event_bus: IEventBus[TManager],
         uow: IUnitOfWork[TManager],
-        *repositories: IBaseRepository[TManager],
+        repository: TRepository | None = None,
+        query_bus: IQueryBus[TManager] | None = None,
+        *repositories: TRepository,
     ) -> None:
         self.event_bus = event_bus
         self.uow = uow
+        self._repository = repository
+        self._query_bus = query_bus
+        if repository is not None:
+            self.uow.attach_repo(repository)
         for repository in repositories:
             self.uow.attach_repo(repository)
+
+    @property
+    def repository(self) -> TRepository:
+        if self._repository is None:
+            raise ValueError("Repository not provided")
+        return self._repository
+
+    @property
+    def query_bus(self) -> IQueryBus[Any]:
+        if self._query_bus is None:
+            raise ValueError("Query bus not provided")
+        return self._query_bus
 
     def handle_message(self, message: CloudMessage[TMessagePayloadType]) -> None:
         use_case = self.get_use_case(message.payload)
@@ -51,10 +72,12 @@ class MessageHandler(IMessageHandler[TMessagePayloadType]):
         return self.event_bus.publish_from_outbox()
 
 
-class EventHandler(MessageHandler[TEvent]):
+class EventHandlerBase(MessageHandler[TEvent, TRepository]):
     class UseCaseImpl(IUseCase):
         def __init__(
-            self, event_handler: "EventHandler[TEvent]", event: TEvent
+            self,
+            event_handler: "EventHandlerBase[TEvent, TRepository]",
+            event: TEvent,
         ) -> None:
             self.event_handler = event_handler
             self.event = event
@@ -70,23 +93,29 @@ class EventHandler(MessageHandler[TEvent]):
         return self.UseCaseImpl(self, message)
 
 
-class CommandHandler(MessageHandler[TCommand]):
+class CommandHandlerBase(MessageHandler[TCommand, TRepository]):
     def execute(self, command: TCommand) -> Iterable[TEvento]:
         return []
 
     class UseCaseImpl(IUseCase):
         def __init__(
-            self, event_handler: "CommandHandler[TCommand]", event: TCommand
+            self,
+            command_handler: "CommandHandlerBase[TCommand, TRepository]",
+            command: TCommand,
         ) -> None:
-            self.event_handler = event_handler
-            self.event = event
+            self.command_handler = command_handler
+            self.command = command
 
         def execute(self):
-            evento = self.event_handler.execute(self.event)
+            evento = self.command_handler.execute(self.command)
             return evento
 
     def get_use_case(self, message: TCommand) -> IUseCase:
         return self.UseCaseImpl(self, message)
+
+
+EventHandler = EventHandlerBase[TEvent, Any]
+CommandHandler = CommandHandlerBase[TCommand, Any]
 
 
 class QueryHandler(IQueryHandler[TManager, TQuery, TView]):

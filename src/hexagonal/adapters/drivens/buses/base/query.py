@@ -7,6 +7,8 @@ from hexagonal.domain import (
     HandlerAlreadyRegistered,
     HandlerNotRegistered,
     Query,
+    QueryBase,
+    QueryOne,
     QueryResult,
     QueryResults,
     TQuery,
@@ -22,12 +24,12 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
         self.handlers = {}
         super().initialize(env)
 
-    def _get_name(self, query_type: Type[Query[TView]]) -> str:
+    def _get_name(self, query_type: Type[QueryBase[TView]]) -> str:
         return get_topic(query_type)
 
     def _get_handler(
-        self, query: Query[TView]
-    ) -> IQueryHandler[TManager, Query[TView], TView] | None:
+        self, query: QueryBase[TView]
+    ) -> IQueryHandler[TManager, QueryBase[TView], TView] | None:
         name = self._get_name(query.__class__)
         return self.handlers.get(name)
 
@@ -51,6 +53,14 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
             raise HandlerNotRegistered(f"Query: {name}")
 
     @overload
+    def get(
+        self,
+        query: QueryOne[TView],
+        *,
+        one: bool = False,
+    ) -> QueryResult[TView]: ...
+
+    @overload
     def get(self, query: Query[TView], *, one: Literal[True]) -> QueryResult[TView]: ...
 
     @overload
@@ -63,7 +73,7 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
 
     def get(
         self,
-        query: Query[TView],
+        query: Query[TView] | QueryOne[TView],
         *,
         one: bool = False,
     ) -> QueryResult[TView] | QueryResults[TView]:
@@ -73,7 +83,7 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
         if not handler:
             raise HandlerNotRegistered(f"Query: {name}")
         results = handler.get(query)
-        if not one:
+        if not (one or isinstance(query, QueryOne)):
             return results
         if len(results) == 0:
             raise ValueError("No results found")

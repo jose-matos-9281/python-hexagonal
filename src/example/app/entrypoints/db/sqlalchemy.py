@@ -1,0 +1,32 @@
+# pyright: reportMissingParameterType=none, reportGeneralTypeIssues=none
+
+from example.app.adapters.drivens.repository.sqlalchemy import (
+    exampleSQLAlchemyInfrastructure,
+)
+from example.app.adapters.drivers import exampleAppProxyAdapter
+from example.app.application import exampleApp
+from example.app.ports.drivers import IexampleApp
+from hexagonal.entrypoints import Entrypoint
+from hexagonal.entrypoints.sqlalchemy import SQLAlchemyInfrastructureEntrypoint
+from hexagonal.integrations.sqlalchemy import SQLAlchemyConnectionContextManager
+
+
+class SQLAlchemyexampleEntrypoint(
+    Entrypoint[IexampleApp[SQLAlchemyConnectionContextManager]]
+):
+    env = {
+        "CREATE_TABLES": "false",
+    }
+
+    @classmethod
+    def get(cls, env=None):
+        env = cls.construct_env(env)
+        sqlalchemy_infra = SQLAlchemyInfrastructureEntrypoint.get(env)
+        infrastructure = exampleSQLAlchemyInfrastructure(
+            sqlalchemy_infra.mapper,
+            sqlalchemy_infra.connection_manager,
+        )
+        infrastructure.initialize(env)
+        app = exampleApp(infrastructure)
+        application = exampleAppProxyAdapter(app)
+        return application

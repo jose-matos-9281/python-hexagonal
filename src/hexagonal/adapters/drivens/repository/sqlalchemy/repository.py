@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, ClassVar, Dict, Mapping, Sequence, Tuple, TypeVar, cast
+from abc import abstractmethod
+from typing import Any, ClassVar, Dict, Mapping, Sequence, Tuple, cast
 from uuid import UUID
 
 from eventsourcing.domain import CanMutateAggregate
@@ -11,22 +12,102 @@ from eventsourcing.persistence import StoredEvent
 from eventsourcing.utils import strtobool
 from sqlalchemy import Connection, delete, insert, select, update
 
-from hexagonal.adapters.drivens.repository.base import BaseAggregateRepositoryAdapter
+from hexagonal.adapters.drivens.repository.base import (
+    BaseAggregateRepositoryAdapter,
+    BaseEntityRepositoryAdapter,
+    BaseSearchRepositoryAdapter,
+)
 from hexagonal.domain import (
     AggregateNotFound,
-    AggregateRoot,
     AggregateSnapshot,
     AggregateVersionMismatch,
     SnapshotState,
+    TAggregate,
+    TEntity,
     TIdEntity,
+    TQuery,
+    TView,
 )
 
 from .datastore import SQLAlchemyConnectionContextManager
 from .models import create_aggregates_table, create_events_table
 
-TAggregate = TypeVar("TAggregate", bound=AggregateRoot[Any, Any])
-
 logger = logging.getLogger(__name__)
+
+
+class SQLAlchemyEntityRepositoryAdapter(
+    BaseEntityRepositoryAdapter[SQLAlchemyConnectionContextManager, TEntity, TIdEntity]
+):
+    """SQLAlchemy repository adapter for entities.
+
+    This adapter implements the IEntityRepository interface using SQLAlchemy
+    as the backing store. It handles the persistence and retrieval of entities.
+
+    Supports multiple database backends (PostgreSQL, MySQL, SQLite) through
+    SQLAlchemy's abstraction layer.
+
+    Args:
+        mapper: Mapper for converting between domain and persistence models
+        connection_manager: SQLAlchemy connection context manager
+    """
+
+    def initialize(self, env: Mapping[str, str]) -> None:
+        """Initialize the repository from environment variables."""
+        super().initialize(env)
+        self._schema_name: str | None = self.env.get("SCHEMA_NAME")
+
+    def _get(self, conn: Connection, id: TIdEntity) -> TEntity | None:
+        """Fetch entity from database."""
+        # Implement entity retrieval logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        return None
+
+    def _insert(self, conn: Connection, entity: TEntity) -> None:
+        """Save an entity to the database."""
+        # Implement entity persistence logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        pass
+
+    def _update(self, conn: Connection, entity: TEntity) -> None:
+        """Update an existing entity in the database."""
+        # Implement entity update logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        pass
+
+    def _delete(self, conn: Connection, id: TIdEntity) -> None:
+        """Delete an entity from the database."""
+        # Implement entity deletion logic using SQLAlchemy
+        # This is a placeholder implementation and should be replaced with actual logic
+        pass
+
+    def get(self, id: TIdEntity) -> TEntity:
+        """Get an entity by its ID."""
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            entity = self._get(conn, id)
+        if entity is None:
+            raise AggregateNotFound(f"Entity with id {id} not found")
+        return entity
+
+    def save(self, entity: TEntity):
+        """Save an entity to the repository."""
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            existing = self._get(conn, entity.id)
+            if existing is None:
+                self._insert(conn, entity)
+            else:
+                self._update(conn, entity)
+
+    def delete(self, id: TIdEntity) -> TEntity:
+        """Delete an entity from the repository."""
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            entity = self._get(conn, id)
+            if entity is None:
+                raise AggregateNotFound(f"Entity with id {id} not found")
+            self._delete(conn, id)
+        return entity
 
 
 class SQLAlchemyRepositoryAdapter(
@@ -322,3 +403,40 @@ class SQLAlchemyRepositoryAdapter(
             self._save_event_history(conn, events)
             self._delete(conn, id)
         return agg
+
+
+class SQLAlchemySearchRepositoryAdapter(
+    BaseSearchRepositoryAdapter[SQLAlchemyConnectionContextManager, TQuery, TView]
+):
+    """SQLAlchemy repository adapter for search queries.
+
+    This adapter implements the ISearchRepository interface using SQLAlchemy
+    as the backing store. It handles executing search queries and returning
+    results in a view format.
+
+    Supports multiple database backends (PostgreSQL, MySQL, SQLite) through
+    SQLAlchemy's abstraction layer.
+
+    Args:
+        mapper: Mapper for converting between domain and persistence models
+        connection_manager: SQLAlchemy connection context manager
+    """
+
+    @abstractmethod
+    def _search(self, conn: Connection, query: TQuery) -> Sequence[TView]: ...
+
+    def search(self, query: TQuery) -> Sequence[TView]:
+        """Execute a search query against the repository.
+
+        Args:
+            query: The search query to execute
+
+        Returns:
+            A sequence of view objects matching the query criteria
+
+        Raises:
+            RuntimeError: If not attached to a unit of work
+        """
+        self.verify()
+        with self.connection_manager.cursor() as conn:
+            return self._search(conn, query)

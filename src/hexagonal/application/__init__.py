@@ -1,15 +1,31 @@
-from .api import BaseAPI, GetEvent
+from .api import BaseAPI, GetEvent, TBaseApp
 from .app import Application
 from .bus_app import BusAppGroup, ComposableBusApp
-from .handlers import CommandHandler, EventHandler, MessageHandler, QueryHandler
+from .handlers import (
+    CommandHandler,
+    CommandHandlerBase,
+    EventHandler,
+    EventHandlerBase,
+    MessageHandler,
+    QueryHandler,
+)
 from .infrastructure import (
     ComposableInfrastructure,
     Infrastructure,
     InfrastructureGroup,
 )
-from .query import AggregateView, GetById, GetByIdHandler, SearchAggregateRepository
+from .query import (
+    AggregateView,
+    GetAggregateByIdHandler,
+    GetById,
+    GetByIdHandler,
+    GetEntityByIdHandler,
+    SearchAggregateRepository,
+)
+from .topics import RegisterTopics
 
 __all__ = [
+    "TBaseApp",
     "BaseAPI",
     "GetEvent",
     "Application",
@@ -26,4 +42,9 @@ __all__ = [
     "SearchAggregateRepository",
     "AggregateView",
     "GetByIdHandler",
+    "RegisterTopics",
+    "GetAggregateByIdHandler",
+    "GetEntityByIdHandler",
+    "CommandHandlerBase",
+    "EventHandlerBase",
 ]
