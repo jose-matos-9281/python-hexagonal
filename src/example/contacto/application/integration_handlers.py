@@ -1,5 +1,4 @@
 from example.app.ports.drivens import IexampleInfrastructure
-from example.contacto.ports.drivens import IContactoRepository
 from hexagonal.application import ComposableBusApp, ScopedMessageHandlerProvider
 from hexagonal.ports.drivens import (
     ICommandBus,

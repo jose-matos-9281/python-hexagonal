@@ -1,5 +1,4 @@
 from example.app.ports.drivens import IexampleInfrastructure
-from example.contacto.ports.drivens import IEntidadContactoRepository
 from hexagonal.application import (
     ComposableBusApp,
     GetAggregateByIdHandler,

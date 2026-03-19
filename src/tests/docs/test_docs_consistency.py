@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import re
 from collections import Counter
 from pathlib import Path
-import re
-
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DOCS_EVIDENCE_MAP = REPO_ROOT / "docs/reference/evidence-map.yaml"

@@ -1,10 +1,11 @@
 from enum import Enum
 from typing import Generic, Mapping, Type, TypeVar
 
-from hexagonal.integrations.sqlalchemy import SQLAlchemyConnectionContextManager
-from hexagonal.application import Infrastructure
 from sqlalchemy import insert, select
 from sqlalchemy.orm import DeclarativeBase
+
+from hexagonal.application import Infrastructure
+from hexagonal.integrations.sqlalchemy import SQLAlchemyConnectionContextManager
 
 T = TypeVar("T", bound=DeclarativeBase)
 E = TypeVar("E", bound=Enum)

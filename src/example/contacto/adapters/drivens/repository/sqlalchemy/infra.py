@@ -3,11 +3,11 @@ from uuid import UUID
 from eventsourcing.persistence import Mapper
 
 from example.contacto.ports.drivens import IAppContactoInfrastructure
+from hexagonal.application import InfrastructureGroup
 from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyUnitOfWork,
 )
-from hexagonal.application import InfrastructureGroup
 
 from .contacto import SQLAlchemyContactoRepositoryAdapter
 from .entidad import SQLAlchemyEntidadRepositoryAdapter

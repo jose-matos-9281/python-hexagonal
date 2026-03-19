@@ -1,7 +1,8 @@
 import os
 
-from hexagonal.adapters.drivens.repository.sqlalchemy.models import metadata
 from sqlalchemy.orm import DeclarativeBase
+
+from hexagonal.adapters.drivens.repository.sqlalchemy.models import metadata
 
 SCHEMA = os.getenv(
     "SCHEMA_NAME",

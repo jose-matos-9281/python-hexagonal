@@ -1,4 +1,4 @@
-from example import exampleAPI, exampleEntrypoint
+from example import exampleEntrypoint
 from example.app.entrypoints.db.sqlalchemy import SQLAlchemyexampleEntrypoint
 from example.app.entrypoints.main import exampleEntrypoint as main_example_entrypoint
 from example.contacto.domain.shared import TipoContacto

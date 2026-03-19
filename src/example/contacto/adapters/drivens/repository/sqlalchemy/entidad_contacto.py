@@ -18,11 +18,11 @@ from example.database.entidad_contacto import (
     ValidacionContactoEntidad as ValidacionContactoEntidadModel,
 )
 from example.shared.mapper_enum_tables import MapperEnumTables
+from hexagonal.domain import AggregateSnapshot, SnapshotState
 from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyRepositoryAdapter,
 )
-from hexagonal.domain import AggregateSnapshot, SnapshotState
 
 
 class SQLAlchemyEntidadContactoRepositoryAdapter(

@@ -1,9 +1,5 @@
 from .base import Base
-from .contacto import (
-    Contacto,
-    EstadoValidacionContacto,
-    TipoContacto
-)
+from .contacto import Contacto, EstadoValidacionContacto, TipoContacto
 from .entidad import Afiliado, Entidad, TipoEntidad
 from .entidad_contacto import EntidadContacto, ValidacionContactoEntidad
 

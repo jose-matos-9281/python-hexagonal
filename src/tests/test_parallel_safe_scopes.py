@@ -1,5 +1,4 @@
 from example.contacto.domain.shared import TipoContacto
-
 from tests.use_cases.base import (
     bootstrap_example_stack,
     count_inbox_rows,

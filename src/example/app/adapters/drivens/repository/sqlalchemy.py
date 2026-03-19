@@ -6,12 +6,14 @@ from eventsourcing.persistence import Mapper
 
 from example.app.ports.drivens import IexampleInfrastructure
 from example.contacto.adapters.drivens.repository.sqlalchemy import (
-    SQLAlchemyContactoRepositoryAdapter,
     SQLAlchemyContactoAppInfrastructure,
+    SQLAlchemyContactoRepositoryAdapter,
     SQLAlchemyEntidadContactoRepositoryAdapter,
     SQLAlchemyEntidadRepositoryAdapter,
 )
-from hexagonal.application import ComposableInfrastructure, InfrastructureGroup
+from hexagonal.application import (
+    Infrastructure,
+)
 from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyDatastore,
@@ -20,7 +22,6 @@ from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyScopeRunner,
     SQLAlchemyUnitOfWork,
 )
-from hexagonal.application import Infrastructure
 
 
 @dataclass(frozen=True)
