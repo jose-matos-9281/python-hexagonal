@@ -121,7 +121,7 @@ class BaseAPI(Generic[TBaseApp]):
         self._app = app
         self.topics = self.Events.get_topics() + self.Commands.get_topics()
 
-    def register_topics(self):
+    def register_topics(self) -> None:
         for topic_name, topic in self.topics:
             register_topic(topic_name, topic)
 
@@ -206,3 +206,6 @@ class BaseAPI(Generic[TBaseApp]):
             evento=cloud_message,
             events={event: wrapper.event for event, wrapper in awaited.items()},
         )
+
+
+__all__ = ["ApiCommandResponse", "ApiEventResponse", "BaseAPI", "GetEvent", "TBaseApp"]

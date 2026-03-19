@@ -12,12 +12,12 @@ class RegisterTopics:
 
     def __init__(
         self, *topics: TRegistableTopics | "RegisterTopics", clear: bool = True
-    ):
+    ) -> None:
         if clear:
             self.topics.clear()
         self.topics += list(topics)
 
-    def __call__(self):
+    def __call__(self) -> None:
         self.apply()
 
     @classmethod
@@ -30,7 +30,7 @@ class RegisterTopics:
             raise ValueError(f"Invalid topic: {topic}")
 
     @classmethod
-    def apply(cls):
+    def apply(cls) -> None:
         for topic, obj in [cls._reduce(topic) for topic in cls.topics]:
             register_topic(topic, obj)
 
@@ -41,5 +41,5 @@ class RegisterTopics:
         return RegisterTopics(*(self.topics + other.topics))
 
     @classmethod
-    def register(cls, *topics: TRegistableTopics | "RegisterTopics"):
+    def register(cls, *topics: TRegistableTopics | "RegisterTopics") -> None:
         cls.topics += list(topics)

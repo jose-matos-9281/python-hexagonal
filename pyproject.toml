@@ -26,6 +26,22 @@ module-name = "hexagonal"
 select = ["I", "E", "F", "B"]
 fixable = ["I", "E", "F", "B"]
 
+[tool.mypy]
+mypy_path = ["src"]
+python_version = "3.12"
+strict = true
+namespace_packages = true
+explicit_package_bases = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["alembic", "alembic.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disable_error_code = ["attr-defined", "no-untyped-call", "no-untyped-def", "var-annotated"]
+
 [dependency-groups]
 dev = [
     "alembic>=1.18.4",

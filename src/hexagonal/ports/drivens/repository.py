@@ -26,6 +26,8 @@ TManager = TypeVar("TManager", bound=IConnectionManager)
 TResult = TypeVar("TResult")
 TReadScope = TypeVar("TReadScope")
 TWriteScope = TypeVar("TWriteScope")
+TReadScope_co = TypeVar("TReadScope_co", covariant=True)
+TWriteScope_co = TypeVar("TWriteScope_co", covariant=True)
 
 
 @dataclass(frozen=True)
@@ -34,20 +36,24 @@ class ExecutionScope(Generic[TManager]):
     repositories: Mapping[str, object]
 
 
-class IWriteScopeFactory(Protocol, Generic[TWriteScope]):
-    def create_write_scope(self) -> TWriteScope: ...
+class IWriteScopeFactory(Protocol, Generic[TWriteScope_co]):
+    def create_write_scope(self) -> TWriteScope_co: ...
 
 
-class IReadScopeFactory(Protocol, Generic[TReadScope]):
-    def create_read_scope(self) -> TReadScope: ...
+class IReadScopeFactory(Protocol, Generic[TReadScope_co]):
+    def create_read_scope(self) -> TReadScope_co: ...
 
 
-class IWriteScopeRunner(Protocol, Generic[TWriteScope]):
-    def run_in_write_scope(self, work: Callable[[TWriteScope], TResult]) -> TResult: ...
+class IWriteScopeRunner(Protocol, Generic[TWriteScope_co]):
+    def run_in_write_scope(
+        self, work: Callable[[TWriteScope_co], TResult]
+    ) -> TResult: ...
 
 
-class IReadScopeRunner(Protocol, Generic[TReadScope]):
-    def run_in_read_scope(self, work: Callable[[TReadScope], TResult]) -> TResult: ...
+class IReadScopeRunner(Protocol, Generic[TReadScope_co]):
+    def run_in_read_scope(
+        self, work: Callable[[TReadScope_co], TResult]
+    ) -> TResult: ...
 
 
 class IBaseRepository(IBaseInfrastructure, Generic[TManager]):
@@ -204,3 +210,30 @@ class IPairInboxOutbox(IBaseInfrastructure, Generic[TManager]):
 
 
 TRepository = TypeVar("TRepository", bound=IBaseRepository[Any])
+
+__all__ = [
+    "ExecutionScope",
+    "IAggregateRepository",
+    "IBaseRepository",
+    "IConnectionManager",
+    "IEntityRepository",
+    "IInboxRepository",
+    "IOutboxRepository",
+    "IPairInboxOutbox",
+    "IReadScopeFactory",
+    "IReadScopeRunner",
+    "ISearchRepository",
+    "IUnitOfWork",
+    "IWriteScopeFactory",
+    "IWriteScopeRunner",
+    "TAggregate",
+    "TEntity",
+    "TIdEntity",
+    "TManager",
+    "TQuery",
+    "TReadScope",
+    "TRepository",
+    "TResult",
+    "TView",
+    "TWriteScope",
+]

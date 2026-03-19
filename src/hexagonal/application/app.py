@@ -14,10 +14,10 @@ from hexagonal.ports.drivers import IBaseApplication, IBusApp
 class GetEvent(Generic[TEvent]):
     event: TEvent | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.event = None
 
-    def __call__(self, event: TEvent):
+    def __call__(self, event: TEvent) -> None:
         self.event = event
 
 
@@ -26,7 +26,7 @@ class Application(IBaseApplication[TManager]):
         self,
         bus_app: IBusApp[TManager],
         bus_infrastructure: IBusInfrastructure[TManager],
-    ):
+    ) -> None:
         bus_infrastructure.verify()
         self._bus_infrastructure = bus_infrastructure
         self._bus_app = bus_app
@@ -64,8 +64,9 @@ class Application(IBaseApplication[TManager]):
         command: CloudMessage[TCommand],
         *event_types: Type[TEvent],
     ) -> Dict[Type[TEvent], TEvent | None]:
-        handlers = [(event_type, GetEvent[event_type]()) for event_type in event_types]  # type: ignore
-        # type: ignore
+        handlers: list[tuple[Type[TEvent], GetEvent[TEvent]]] = [
+            (event_type, GetEvent[TEvent]()) for event_type in event_types
+        ]
         for event_type, handler in handlers:
             self.event_bus.wait_for_publish(event_type, handler)
         self.command_bus.dispatch(command)

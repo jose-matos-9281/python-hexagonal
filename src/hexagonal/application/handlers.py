@@ -16,21 +16,26 @@ from hexagonal.ports.drivens import (
     IMessageHandler,
     IQueryBus,
     IQueryHandler,
+    IReadScopeRunner,
     ISearchRepository,
     IUnitOfWork,
     IUseCase,
     TManager,
     TRepository,
+    IWriteScopeRunner,
 )
 
 logger = logging.getLogger(__name__)
 
 TWriteScope = TypeVar("TWriteScope")
 TReadScope = TypeVar("TReadScope")
+TWriteScope_contra = TypeVar("TWriteScope_contra", contravariant=True)
 
 
-class IScopedMessageHandlerProvider(Protocol[TMessagePayloadType, TWriteScope]):
-    def create(self, scope: TWriteScope) -> IMessageHandler[TMessagePayloadType]: ...
+class IScopedMessageHandlerProvider(Protocol[TMessagePayloadType, TWriteScope_contra]):
+    def create(
+        self, scope: TWriteScope_contra
+    ) -> IMessageHandler[TMessagePayloadType]: ...
 
 
 class ScopedMessageHandlerProvider(
@@ -39,7 +44,7 @@ class ScopedMessageHandlerProvider(
 ):
     def __init__(
         self,
-        write_scope_runner: Any,
+        write_scope_runner: IWriteScopeRunner[TWriteScope],
         factory: Callable[[TWriteScope], IMessageHandler[TMessagePayloadType]],
     ) -> None:
         self._write_scope_runner = write_scope_runner
@@ -66,7 +71,7 @@ class ScopedQueryHandlerProvider(
 ):
     def __init__(
         self,
-        read_scope_runner: Any,
+        read_scope_runner: IReadScopeRunner[TReadScope],
         factory: Callable[[TReadScope], IQueryHandler[TManager, TQuery, TView]],
     ) -> None:
         self._read_scope_runner = read_scope_runner
@@ -130,7 +135,7 @@ class MessageHandler(
                 return
             messages = [message.derive(event, **message.metadata) for event in events]
             self.event_bus.save_to_outbox(*messages)
-        return self.event_bus.publish_from_outbox()
+        self.event_bus.publish_from_outbox()
 
 
 class EventHandlerBase(MessageHandler[TEvent, TRepository]):
@@ -143,7 +148,7 @@ class EventHandlerBase(MessageHandler[TEvent, TRepository]):
             self.event_handler = event_handler
             self.event = event
 
-        def execute(self):
+        def execute(self) -> Iterable[TEvento]:
             evento = self.event_handler.handle(self.event)
             return evento
 
@@ -167,7 +172,7 @@ class CommandHandlerBase(MessageHandler[TCommand, TRepository]):
             self.command_handler = command_handler
             self.command = command
 
-        def execute(self):
+        def execute(self) -> Iterable[TEvento]:
             evento = self.command_handler.execute(self.command)
             return evento
 

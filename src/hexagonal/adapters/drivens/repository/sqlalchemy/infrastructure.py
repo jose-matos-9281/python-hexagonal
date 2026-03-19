@@ -1,7 +1,7 @@
 """SQLAlchemy infrastructure grouping."""
 
 import threading
-from typing import Callable, Generic, Mapping, TypeVar
+from typing import Callable, Generic, Mapping, TypeVar, cast
 
 from hexagonal.adapters.drivens.mappers import MessageMapper
 from hexagonal.application import Infrastructure
@@ -18,7 +18,7 @@ class SQLAlchemyScopeRunner(Generic[TWriteScope, TReadScope]):
         self,
         create_write_scope: Callable[[], TWriteScope],
         create_read_scope: Callable[[], TReadScope],
-    ):
+    ) -> None:
         self._create_write_scope = create_write_scope
         self._create_read_scope = create_read_scope
         self._local = threading.local()
@@ -46,7 +46,9 @@ class SQLAlchemyScopeRunner(Generic[TWriteScope, TReadScope]):
 
     @property
     def current_write_scope(self) -> TWriteScope | None:
-        stack = getattr(self._local, "write_scope_stack", None)
+        stack = cast(
+            list[TWriteScope] | None, getattr(self._local, "write_scope_stack", None)
+        )
         if not stack:
             return None
         return stack[-1]
@@ -63,7 +65,7 @@ class SQLAlchemyInfrastructure(Infrastructure):
         self,
         mapper: MessageMapper,
         datastore: SQLAlchemyDatastore | None = None,
-    ):
+    ) -> None:
         """Initialize SQLAlchemy infrastructure.
 
         Args:

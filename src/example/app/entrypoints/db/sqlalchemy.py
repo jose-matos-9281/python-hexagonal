@@ -1,5 +1,7 @@
 # pyright: reportMissingParameterType=none, reportGeneralTypeIssues=none
 
+from typing import Mapping
+
 from example.app.adapters.drivens.repository.sqlalchemy import (
     exampleSQLAlchemyInfrastructure,
 )
@@ -22,7 +24,9 @@ class SQLAlchemyexampleEntrypoint(
     }
 
     @classmethod
-    def get(cls, env=None):
+    def get(
+        cls, env: Mapping[str, str] | None = None
+    ) -> IexampleApp[SQLAlchemyConnectionContextManager]:
         env = cls.construct_env(env)
         sqlalchemy_infra = SQLAlchemyInfrastructureEntrypoint.get(env)
         datastore: SQLAlchemyDatastore = sqlalchemy_infra.datastore
@@ -34,3 +38,10 @@ class SQLAlchemyexampleEntrypoint(
         app = exampleApp(infrastructure)
         application = exampleAppProxyAdapter(app)
         return application
+
+
+__all__ = [
+    "SQLAlchemyConnectionContextManager",
+    "SQLAlchemyDatastore",
+    "SQLAlchemyexampleEntrypoint",
+]

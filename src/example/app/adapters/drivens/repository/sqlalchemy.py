@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from typing import Mapping
 from uuid import UUID
 
-from eventsourcing.persistence import Mapper
-
 from example.app.ports.drivens import IexampleInfrastructure
 from example.contacto.adapters.drivens.repository.sqlalchemy import (
     SQLAlchemyContactoAppInfrastructure,
@@ -14,6 +12,7 @@ from example.contacto.adapters.drivens.repository.sqlalchemy import (
 from hexagonal.application import (
     Infrastructure,
 )
+from hexagonal.adapters.drivens.mappers import MessageMapper
 from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyDatastore,
@@ -39,9 +38,9 @@ class exampleSQLAlchemyInfrastructure(
 ):
     def __init__(
         self,
-        mapper: Mapper[UUID],
+        mapper: MessageMapper,
         datastore: SQLAlchemyDatastore,
-    ):
+    ) -> None:
         super().__init__()
         self._mapper = mapper
         self._datastore = datastore
