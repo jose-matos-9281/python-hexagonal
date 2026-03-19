@@ -1,6 +1,6 @@
 # pyright: reportMissingParameterType=none, reportGeneralTypeIssues=none
 
-from typing import Type
+from typing import Mapping, Optional, Type
 
 from hexagonal.adapters.drivers import ApplicationProxyAdapter
 from hexagonal.application import Application
@@ -19,23 +19,27 @@ class AppEntrypoint(Entrypoint[IBaseApplication[TManager]]):
     BUS_GROUP: Type[BusEntrypointGroup[TManager]] = BusEntrypointGroup[TManager]
 
     @classmethod
-    def setBusApp(cls, bus_app: Type[Entrypoint[IBusApp[TManager]]]):
+    def setBusApp(cls, bus_app: Type[Entrypoint[IBusApp[TManager]]]) -> None:
         cls.BUS_APP = bus_app
 
     @classmethod
-    def setOutbox(cls, outbox: Type[Entrypoint[IPairInboxOutbox[TManager]]]):
+    def setOutbox(cls, outbox: Type[Entrypoint[IPairInboxOutbox[TManager]]]) -> None:
         cls.OUTBOX = outbox
 
     @classmethod
-    def setBusInfrastructure(cls, bus_infrastructure: Type[BusEntrypoint[TManager]]):
+    def setBusInfrastructure(
+        cls, bus_infrastructure: Type[BusEntrypoint[TManager]]
+    ) -> None:
         cls.BUS_INFRASTRUCTURE = bus_infrastructure
 
     @classmethod
-    def setBusEntrypointGroup(cls, bus_group: Type[BusEntrypointGroup[TManager]]):
+    def setBusEntrypointGroup(
+        cls, bus_group: Type[BusEntrypointGroup[TManager]]
+    ) -> None:
         cls.BUS_GROUP = bus_group
 
     @classmethod
-    def get(cls, env=None) -> IBaseApplication[TManager]:
+    def get(cls, env: Optional[Mapping[str, str]] = None) -> IBaseApplication[TManager]:
         env = cls.construct_env(env)
         if not hasattr(cls, "BUS_APP"):
             raise ValueError("Bus app is not configured")
@@ -51,3 +55,6 @@ class AppEntrypoint(Entrypoint[IBaseApplication[TManager]]):
         bus_infrastructure = GeneralBusEntrypoint.get(env)
         app = Application(bus_app, bus_infrastructure)
         return ApplicationProxyAdapter(app)
+
+
+__all__ = ["AppEntrypoint"]

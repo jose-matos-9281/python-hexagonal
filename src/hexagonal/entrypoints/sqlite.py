@@ -15,7 +15,7 @@ from hexagonal.entrypoints import AppEntrypoint, Entrypoint
 
 class SQLiteInfrastructureEntrypoint(Entrypoint[SQLiteInfrastructure]):
     @classmethod
-    def get(cls, env: Optional[Mapping[str, str]] = None):
+    def get(cls, env: Optional[Mapping[str, str]] = None) -> SQLiteInfrastructure:
         env = cls.construct_env(env)
         db_path = env.get("SQLITE_DB_PATH")
         if db_path is None:
@@ -35,7 +35,7 @@ class SQLiteInfrastructureEntrypoint(Entrypoint[SQLiteInfrastructure]):
 
 class SQLiteOutboxEntrypoint(Entrypoint[SQLitePairInboxOutbox]):
     @classmethod
-    def get(cls, env: Optional[Mapping[str, str]] = None):
+    def get(cls, env: Optional[Mapping[str, str]] = None) -> SQLitePairInboxOutbox:
         env = cls.construct_env(env)
         infrastructure = SQLiteInfrastructureEntrypoint.get(env)
         pair = SQLitePairInboxOutbox(
@@ -47,3 +47,10 @@ class SQLiteOutboxEntrypoint(Entrypoint[SQLitePairInboxOutbox]):
 
 class SQLiteAppEntrypoint(AppEntrypoint[SQLiteConnectionContextManager]):
     OUTBOX = SQLiteOutboxEntrypoint
+
+
+__all__ = [
+    "SQLiteAppEntrypoint",
+    "SQLiteInfrastructureEntrypoint",
+    "SQLiteOutboxEntrypoint",
+]

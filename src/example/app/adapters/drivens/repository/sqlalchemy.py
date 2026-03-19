@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Mapping
-from uuid import UUID
 
 from example.app.ports.drivens import IexampleInfrastructure
 from example.contacto.adapters.drivens.repository.sqlalchemy import (
@@ -9,10 +8,8 @@ from example.contacto.adapters.drivens.repository.sqlalchemy import (
     SQLAlchemyEntidadContactoRepositoryAdapter,
     SQLAlchemyEntidadRepositoryAdapter,
 )
-from hexagonal.application import (
-    Infrastructure,
-)
 from hexagonal.adapters.drivens.mappers import MessageMapper
+from hexagonal.application import Infrastructure
 from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyDatastore,

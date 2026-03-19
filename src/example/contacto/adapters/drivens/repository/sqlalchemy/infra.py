@@ -1,8 +1,5 @@
-from uuid import UUID
-
-from eventsourcing.persistence import Mapper
-
 from example.contacto.ports.drivens import IAppContactoInfrastructure
+from hexagonal.adapters.drivens.mappers import MessageMapper
 from hexagonal.application import InfrastructureGroup
 from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
@@ -21,9 +18,9 @@ class SQLAlchemyContactoAppInfrastructure(
     def __init__(
         self,
         manager: SQLAlchemyConnectionContextManager,
-        mapper: Mapper[UUID],
+        mapper: MessageMapper,
         uow: SQLAlchemyUnitOfWork | None = None,
-    ):
+    ) -> None:
         self._contacto_repository = SQLAlchemyContactoRepositoryAdapter(
             mapper,
             manager,
@@ -46,17 +43,17 @@ class SQLAlchemyContactoAppInfrastructure(
         )
 
     @property
-    def contacto_repository(self):
+    def contacto_repository(self) -> SQLAlchemyContactoRepositoryAdapter:
         return self._contacto_repository
 
     @property
-    def entidad_contacto_repository(self):
+    def entidad_contacto_repository(self) -> SQLAlchemyEntidadContactoRepositoryAdapter:
         return self._entidad_contacto_repository
 
     @property
-    def uow(self):
+    def uow(self) -> SQLAlchemyUnitOfWork:
         return self._uow
 
     @property
-    def entidad_repository(self):
+    def entidad_repository(self) -> SQLAlchemyEntidadRepositoryAdapter:
         return self._entidad_repository

@@ -47,7 +47,9 @@ class TestMarcarContactado(BaseTest):
 
     @classmethod
     def teardown_class(cls):
-        cls.app.event_bus.shutdown()  # type: ignore
+        shutdown = getattr(cls.app.event_bus, "shutdown", None)
+        if callable(shutdown):
+            shutdown()
         # Cerrar el bus de eventos después de las pruebas
 
     def test_marcar_contactado(self):

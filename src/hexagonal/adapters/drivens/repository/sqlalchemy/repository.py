@@ -89,7 +89,7 @@ class SQLAlchemyEntityRepositoryAdapter(
             raise AggregateNotFound(f"Entity with id {id} not found")
         return entity
 
-    def save(self, entity: TEntity):
+    def save(self, entity: TEntity) -> None:
         """Save an entity to the repository."""
         self.verify()
         with self.connection_manager.cursor() as conn:

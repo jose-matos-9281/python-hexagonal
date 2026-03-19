@@ -104,7 +104,7 @@ class SQLAlchemyEntidadRepositoryAdapter(
                 f"TipoEntidad {entity.value.tipo} not supported for update"
             )
 
-    def _delete(self, conn: Connection, id: IdEntidad):
+    def _delete(self, conn: Connection, id: IdEntidad) -> None:
         stmt = select(EntidadModel).where(EntidadModel.id_entidad == id.value)
         result = conn.execute(stmt).fetchone()
         if not result:
@@ -124,7 +124,7 @@ class SQLAlchemyEntidadRepositoryAdapter(
         stmt_delete = delete(EntidadModel).where(EntidadModel.id_entidad == id.value)
         conn.execute(stmt_delete)
 
-    def save(self, entity):
+    def save(self, entity: Entidad) -> None:
         """Save an entity to the repository."""
         self.verify()
         with self.connection_manager.cursor() as conn:

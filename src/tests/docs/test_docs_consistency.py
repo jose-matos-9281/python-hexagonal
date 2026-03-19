@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 from pathlib import Path
+from typing import TypedDict
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DOCS_EVIDENCE_MAP = REPO_ROOT / "docs/reference/evidence-map.yaml"
@@ -12,11 +13,19 @@ SKILL_EVIDENCE_MAP = (
 HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.*\S)\s*$", re.MULTILINE)
 
 
+class EvidenceMap(TypedDict):
+    page_paths: list[str]
+    evidence_paths: list[str]
+    claim_anchors: list[tuple[str, str]]
+    page_ids: list[str]
+    claim_ids: list[str]
+
+
 def _value(raw: str) -> str:
     return raw.split(":", 1)[1].strip()
 
 
-def _parse_evidence_map(path: Path) -> dict[str, list[str] | list[tuple[str, str]]]:
+def _parse_evidence_map(path: Path) -> EvidenceMap:
     page_paths: list[str] = []
     evidence_paths: list[str] = []
     claim_anchors: list[tuple[str, str]] = []
@@ -82,7 +91,7 @@ def test_evidence_maps_stay_in_sync() -> None:
 
 def test_evidence_map_paths_exist_and_ids_are_unique() -> None:
     parsed = _parse_evidence_map(DOCS_EVIDENCE_MAP)
-    all_paths = [*parsed["page_paths"], *parsed["evidence_paths"]]
+    all_paths: list[str] = parsed["page_paths"] + parsed["evidence_paths"]
 
     missing_paths = [
         relative for relative in all_paths if not (REPO_ROOT / relative).exists()

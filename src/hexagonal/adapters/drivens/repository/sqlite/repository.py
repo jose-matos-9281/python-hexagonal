@@ -206,7 +206,7 @@ class SQLiteRepositoryAdapter(
                     timestamp.isoformat(" ", "milliseconds"),
                 )
                 for stored_event, timestamp in stored_events
-            ],  # type: ignore
+            ],
         )
 
     def save(self, aggregate: TAggregate) -> None:

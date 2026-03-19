@@ -11,7 +11,7 @@ class Sqlalchemy(Entrypoint[IexampleApp[Any]]):
     name = "sqlalchemy"
 
     @classmethod
-    def get(cls, env: Optional[Mapping[str, str]] = None):
+    def get(cls, env: Optional[Mapping[str, str]] = None) -> IexampleApp[Any]:
         from .db.sqlalchemy import SQLAlchemyexampleEntrypoint
 
         return SQLAlchemyexampleEntrypoint.get(env)
@@ -21,3 +21,6 @@ class exampleBusAppEntrypoint(EntrypointGroup[IexampleApp[Any]]):
     env_key = "ENV_REPOSITORY"
     entrypoints = [Sqlalchemy]
     env = {"ENV_REPOSITORY": "sqlalchemy"}
+
+
+__all__ = ["Sqlalchemy", "exampleBusAppEntrypoint"]

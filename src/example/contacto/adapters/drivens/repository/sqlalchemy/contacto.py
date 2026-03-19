@@ -41,7 +41,7 @@ class SQLAlchemyContactoRepositoryAdapter(
         self, conn: Connection, snap: AggregateSnapshot[SnapshotState[IdContacto]]
     ) -> None:
         super()._insert_snapshot(conn, snap)
-        state = cast(Exampletate, snap.state)  # type: ignore
+        state = cast(Exampletate, snap.state)
         usuario = state.usuario_validacion.value if state.usuario_validacion else None
         user_create = state.usuario_creacion.value if state.usuario_creacion else None
         stmt = insert(ContactoModel).values(
@@ -62,7 +62,7 @@ class SQLAlchemyContactoRepositoryAdapter(
         self, conn: Connection, snap: AggregateSnapshot[SnapshotState[IdContacto]]
     ) -> None:
         super()._update_snapshot(conn, snap)
-        state = cast(Exampletate, snap.state)  # type: ignore
+        state = cast(Exampletate, snap.state)
         usuario = state.usuario_validacion.value if state.usuario_validacion else None
         user_create = state.usuario_creacion.value if state.usuario_creacion else None
         stmt = (

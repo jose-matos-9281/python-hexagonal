@@ -90,13 +90,13 @@ class AggregateSnapshot(Inmutable, CanSnapshotAggregate[UUID], Generic[TSnapshot
             aggregate_state.pop("_id")
             aggregate_state.pop("_version")
             aggregate_state.pop("_pending_events")
-        dict_snap = dict(
-            originator_id=aggregate.id,  # type: ignore[call-arg]
-            originator_version=aggregate.version,  # pyright: ignore[reportCallIssue]
-            timestamp=cls.create_timestamp(),  # pyright: ignore[reportCallIssue]
-            topic=get_topic(type(aggregate)),  # type: ignore[call-arg]
-            state=aggregate_state,  # pyright: ignore[reportCallIssue]
-        )
+        dict_snap = {
+            "originator_id": aggregate.id,
+            "originator_version": aggregate.version,
+            "timestamp": cls.create_timestamp(),
+            "topic": get_topic(type(aggregate)),
+            "state": aggregate_state,
+        }
         return cls.model_validate(dict_snap)
 
 
@@ -131,7 +131,7 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity, TSnapshotState]):
                     cls.Snapshot = AggregateSnapshot[state_type]  # type: ignore[valid-type]
 
     @classmethod
-    def create_id(cls, *args: Any, **kwargs: Any):
+    def create_id(cls, *args: Any, **kwargs: Any) -> UUID:
         return cls._id_type.new(*args, **kwargs).value
 
     @property
