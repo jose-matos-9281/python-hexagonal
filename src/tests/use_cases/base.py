@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 
 from example import exampleAPI, exampleEntrypoint
 from hexagonal.entrypoints.sqlalchemy import clear_infrastructure_cache
+from hexagonal.ports.drivers import IBaseApplication
 
 logger = getLogger(__name__)
 
@@ -18,7 +19,9 @@ def get_example_write_scope(app: Any) -> Any:
     return app.bus_app.infrastructure.create_write_scope()
 
 
-def count_outbox_rows(app: Any, *, published: bool | None = None) -> int:
+def count_outbox_rows(
+    app: IBaseApplication[Any], *, published: bool | None = None
+) -> int:
     scope = get_example_write_scope(app)
     table = scope.outbox_repository._outbox_table
     stmt = select(func.count()).select_from(table)
@@ -31,7 +34,9 @@ def count_outbox_rows(app: Any, *, published: bool | None = None) -> int:
         return int(conn.execute(stmt).scalar_one())
 
 
-def count_inbox_rows(app: Any, *, processed: bool | None = None) -> int:
+def count_inbox_rows(
+    app: IBaseApplication[Any], *, processed: bool | None = None
+) -> int:
     scope = get_example_write_scope(app)
     table = scope.inbox_repository._inbox_table
     stmt = select(func.count()).select_from(table)
@@ -78,7 +83,7 @@ def bootstrap_example_stack(
     env: Mapping[str, str] | None = None,
     *,
     register_topics: bool = True,
-) -> tuple[dict[str, str], Any, Any]:
+) -> tuple[dict[str, str], IBaseApplication[Any], exampleAPI[Any]]:
     bootstrap_env = build_example_env(temp_db, env)
     reset_example_runtime_state()
     migrate_example_database(bootstrap_env)

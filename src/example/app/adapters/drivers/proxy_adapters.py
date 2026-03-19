@@ -1,5 +1,5 @@
-from example.app.ports.drivers import IexampleApp
 from example.app.ports.drivens import IexampleInfrastructure
+from example.app.ports.drivers import IexampleApp
 from hexagonal.ports.drivens import (
     ICommandBus,
     IEventBus,

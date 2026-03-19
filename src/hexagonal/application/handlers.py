@@ -20,9 +20,9 @@ from hexagonal.ports.drivens import (
     ISearchRepository,
     IUnitOfWork,
     IUseCase,
+    IWriteScopeRunner,
     TManager,
     TRepository,
-    IWriteScopeRunner,
 )
 
 logger = logging.getLogger(__name__)

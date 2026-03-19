@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Self, Type
+from typing import Any, Dict, Type
 from uuid import UUID
 
 from example.contacto.domain.shared import (

@@ -1,5 +1,5 @@
-from example.contacto.ports.drivers import IContactoApp
 from example.contacto.ports.drivens import IAppContactoInfrastructure
+from example.contacto.ports.drivers import IContactoApp
 from hexagonal.ports.drivens import (
     ICommandBus,
     IEventBus,
