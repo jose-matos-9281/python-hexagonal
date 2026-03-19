@@ -1,7 +1,8 @@
-from typing import Any, Dict, Type
+from typing import Any, Dict, Self, Type
 from uuid import UUID
 
 from example.contacto.domain.shared import EntidadValue, IdEntidad, TipoEntidad
+from hexagonal.application import AggregateView
 from hexagonal.domain import Entity, GetById
 
 
@@ -10,7 +11,7 @@ class NucleoAfiliado(EntidadValue):
     tipo: TipoEntidad = TipoEntidad.NUCLEO
 
     @classmethod
-    def new(cls, *_: Any, cd_asegurado: str, **__: Any):
+    def new(cls, *_: Any, cd_asegurado: str, **__: Any) -> Self:
         return cls(value=cd_asegurado, cd_asegurado=cd_asegurado)
 
 
@@ -24,7 +25,7 @@ class Afiliado(EntidadValue):
         return self.value
 
     @classmethod
-    def new(cls, *_: Any, cd_asegurado: str, cd_dependiente: str, **__: Any):
+    def new(cls, *_: Any, cd_asegurado: str, cd_dependiente: str, **__: Any) -> Self:
         return cls(
             value=f"{cd_asegurado}-{cd_dependiente}",
             cd_asegurado=cd_asegurado,
@@ -42,8 +43,22 @@ class Entidad(Entity[IdEntidad]):
     value: EntidadValue
 
 
+class EntidadView(AggregateView[Entidad]):
+    pass
+
+
 class GetEntidadById(GetById[Entidad, IdEntidad]):
     @classmethod
-    def new(cls, id: IdEntidad | UUID, *_: Any, **__: Any):
+    def new(cls, id: IdEntidad | UUID, *_: Any, **__: Any) -> "GetEntidadById":
         id = IdEntidad.from_value(id)
-        return super().new(id=id, agg_type=Entidad)
+        return cls(id=id, view=EntidadView)
+
+
+__all__ = [
+    "Afiliado",
+    "Entidad",
+    "EntidadValueStrategy",
+    "EntidadView",
+    "GetEntidadById",
+    "NucleoAfiliado",
+]

@@ -45,7 +45,7 @@ class ValidarEntidadContacto(EntidadContactoCommand, topic_suffix="Validar"):
         usuario: IdUsuario | UUID,
         *_: Any,
         **__: Any,
-    ):
+    ) -> "ValidarEntidadContacto":
         if isinstance(validacion, str):
             validacion = ValidacionEntidadContacto[validacion]
         if isinstance(entidad, EntidadValue):
@@ -79,12 +79,12 @@ class EntidadContactoCorresponde(
 
     @classmethod
     def new(cls, state: EntidadExampletate) -> "EntidadContactoCorresponde":
-        assert state.usuario_validacion is not None, (
-            "El usuario de validación no puede ser None"
-        )
-        assert state.validacion == ValidacionEntidadContacto.CORRESPONDE, (
-            "El estado de validación debe ser CORRESPONDE para crear este evento"
-        )
+        assert (
+            state.usuario_validacion is not None
+        ), "El usuario de validación no puede ser None"
+        assert (
+            state.validacion == ValidacionEntidadContacto.CORRESPONDE
+        ), "El estado de validación debe ser CORRESPONDE para crear este evento"
         return cls(
             id_entidad_contacto=state.id,
             entidad=state.entidad,
@@ -102,12 +102,12 @@ class EntidadContactoNoCorresponde(
 
     @classmethod
     def new(cls, state: EntidadExampletate) -> "EntidadContactoNoCorresponde":
-        assert state.usuario_validacion is not None, (
-            "El usuario de validación no puede ser None"
-        )
-        assert state.validacion == ValidacionEntidadContacto.NO_CORRESPONDE, (
-            "El estado de validación debe ser NO_CORRESPONDE para crear este evento"
-        )
+        assert (
+            state.usuario_validacion is not None
+        ), "El usuario de validación no puede ser None"
+        assert (
+            state.validacion == ValidacionEntidadContacto.NO_CORRESPONDE
+        ), "El estado de validación debe ser NO_CORRESPONDE para crear este evento"
         return cls(
             id_entidad_contacto=state.id,
             entidad=state.entidad,

@@ -30,7 +30,7 @@ class CrearEntidadContacto(EntidadContactoCommand):
         usuario: IdUsuario | UUID | None = None,
         *_: Any,
         **__: Any,
-    ):
+    ) -> "CrearEntidadContacto":
         entidad_id = IdEntidad.from_value(entidad)
         contacto_id = IdContacto.from_value(contacto)
         usuario_id = IdUsuario.from_value(usuario) if usuario else None

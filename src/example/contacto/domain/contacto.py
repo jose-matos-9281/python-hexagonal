@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Type
+from typing import Any, Dict, Self, Type
 from uuid import UUID
 
 from example.contacto.domain.shared import (
@@ -53,24 +53,24 @@ class Contacto(AggregateRoot[IdContacto, Exampletate]):
         self.fecha_validacion: datetime | None = None
 
     @classmethod
-    def create_id(cls, contacto: ContactoValue, *_, **__: Any):
-        return super().create_id(contacto=contacto)
+    def create_id(cls, contacto: ContactoValue, *_: Any, **__: Any) -> UUID:
+        return contacto.to_id().value
 
-    def _marcar_validacion(self, estado: EstadoContacto, usuario: IdUsuario):
+    def _marcar_validacion(self, estado: EstadoContacto, usuario: IdUsuario) -> None:
         self.estado = estado
         self.usuario_validacion = usuario
         self.fecha_validacion = self.Event.create_timestamp()
 
     @command("marcarContactado")
-    def marcar_contactado(self, usuario: IdUsuario):
+    def marcar_contactado(self, usuario: IdUsuario) -> None:
         self._marcar_validacion(EstadoContacto.CONTACTADO, usuario)
 
     @command("marcarNoContactado")
-    def marcar_no_contactado(self, usuario: IdUsuario):
+    def marcar_no_contactado(self, usuario: IdUsuario) -> None:
         self._marcar_validacion(EstadoContacto.NO_CONTACTADO, usuario)
 
     @command("marcarNoContactable")
-    def marcar_no_contactable(self, usuario: IdUsuario):
+    def marcar_no_contactable(self, usuario: IdUsuario) -> None:
         self._marcar_validacion(EstadoContacto.NO_CONTACTABLE, usuario)
 
 
@@ -80,11 +80,21 @@ class ContactoView(AggregateView[Contacto]):
 
 class GetContactoById(GetById[Contacto, IdContacto]):
     @classmethod
-    def new(cls, id: IdContacto | UUID, *_: Any, **__: Any):
+    def new(cls, id: IdContacto | UUID, *_: Any, **__: Any) -> "GetContactoById":
         id = IdContacto.from_value(id)
-        return cls(
-            id=id, view=ContactoView
-        )  # <-- Instancias directamente sin pasar por super().new()
+        return cls(id=id, view=ContactoView)
+
+
+__all__ = [
+    "Contacto",
+    "ContactoValueStrategy",
+    "ContactoView",
+    "Email",
+    "EstadoContacto",
+    "Exampletate",
+    "GetContactoById",
+    "Telefono",
+]
 
 
 # class GetContactoById(GetById[Contacto, IdContacto]):

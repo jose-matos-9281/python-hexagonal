@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any
+from typing import Any, Self
 from uuid import NAMESPACE_URL, uuid5
 
 from hexagonal.domain import ExternalId, IdValueObject, ValueObject
@@ -18,20 +18,20 @@ class TipoEntidad(Enum):
 class ContactoValue(ValueObject[str]):
     tipo: TipoContacto
 
-    def to_id(self):
+    def to_id(self) -> "IdContacto":
         return IdContacto.new(contacto=self)
 
 
 class EntidadValue(ValueObject[str]):
     tipo: TipoEntidad
 
-    def to_id(self):
+    def to_id(self) -> "IdEntidad":
         return IdEntidad.new(entidad=self)
 
 
 class IdContacto(IdValueObject):
     @classmethod
-    def new(cls, *_: Any, contacto: ContactoValue, **__: Any):
+    def new(cls, *_: Any, contacto: ContactoValue, **__: Any) -> Self:
         return cls(
             value=uuid5(
                 NAMESPACE_URL, f"example/{contacto.tipo.value}/{contacto.value}"
@@ -41,7 +41,7 @@ class IdContacto(IdValueObject):
 
 class IdEntidad(IdValueObject):
     @classmethod
-    def new(cls, *_: Any, entidad: EntidadValue, **__: Any):
+    def new(cls, *_: Any, entidad: EntidadValue, **__: Any) -> Self:
         return cls(
             value=uuid5(
                 NAMESPACE_URL, f"entidades/{entidad.tipo.value}/{entidad.value}"
@@ -50,3 +50,14 @@ class IdEntidad(IdValueObject):
 
 
 class IdUsuario(ExternalId): ...
+
+
+__all__ = [
+    "ContactoValue",
+    "EntidadValue",
+    "IdContacto",
+    "IdEntidad",
+    "IdUsuario",
+    "TipoContacto",
+    "TipoEntidad",
+]

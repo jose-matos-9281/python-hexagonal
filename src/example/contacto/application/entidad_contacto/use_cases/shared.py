@@ -60,3 +60,13 @@ EntidadContactoCommandHandler = CommandHandlerBase[
 
 
 TOPICS = RegisterTopics(EntidadExamplenapshot, GetEntidadContactoById)
+
+__all__ = [
+    "EntidadContactoCommand",
+    "EntidadContactoDomainEvent",
+    "EntidadContactoIntegrationEvent",
+    "EntidadExamplenapshot",
+    "GetEntidadContactoById",
+    "TEntidadContactoEvent",
+    "TOPICS",
+]
