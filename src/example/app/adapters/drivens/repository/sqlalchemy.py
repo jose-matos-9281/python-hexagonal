@@ -6,11 +6,11 @@ from example.app.ports.drivens import IexampleInfrastructure
 from example.contacto.adapters.drivens.repository.sqlalchemy import (
     SQLAlchemyContactoAppInfrastructure,
 )
-from hexagonal.adapters.drivens.repository.sqlalchemy import (
+from hexagonal.application import ComposableInfrastructure, InfrastructureGroup
+from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyUnitOfWork,
 )
-from hexagonal.application import ComposableInfrastructure, InfrastructureGroup
 
 
 class exampleSQLAlchemyInfrastructure(

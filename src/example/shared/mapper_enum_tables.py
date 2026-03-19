@@ -1,9 +1,7 @@
 from enum import Enum
 from typing import Generic, Mapping, Type, TypeVar
 
-from hexagonal.adapters.drivens.repository.sqlalchemy import (
-    SQLAlchemyConnectionContextManager,
-)
+from hexagonal.integrations.sqlalchemy import SQLAlchemyConnectionContextManager
 from hexagonal.application import Infrastructure
 from sqlalchemy import insert, select
 from sqlalchemy.orm import DeclarativeBase

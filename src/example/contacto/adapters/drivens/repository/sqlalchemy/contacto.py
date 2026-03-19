@@ -11,11 +11,11 @@ from example.database.contacto import Contacto as ContactoModel
 from example.database.contacto import EstadoValidacionContacto as EstadoContactoModel
 from example.database.contacto import TipoContacto as TipoContactoModel
 from example.shared.mapper_enum_tables import MapperEnumTables
-from hexagonal.adapters.drivens.repository.sqlalchemy import (
+from hexagonal.domain import AggregateSnapshot, SnapshotState
+from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyRepositoryAdapter,
 )
-from hexagonal.domain import AggregateSnapshot, SnapshotState
 
 
 class SQLAlchemyContactoRepositoryAdapter(

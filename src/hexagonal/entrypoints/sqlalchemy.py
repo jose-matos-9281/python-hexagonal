@@ -6,13 +6,8 @@ from eventsourcing.compressor import ZlibCompressor
 from eventsourcing.utils import strtobool
 
 from hexagonal.adapters.drivens.mappers import MessageMapper, OrjsonTranscoder
-from hexagonal.adapters.drivens.repository.sqlalchemy import (
-    SQLAlchemyConnectionContextManager,
-    SQLAlchemyDatastore,
-    SQLAlchemyInfrastructure,
-    SQLAlchemyPairInboxOutbox,
-)
-from hexagonal.adapters.drivens.repository.sqlalchemy.env_vars import (
+from hexagonal.entrypoints import AppEntrypoint, Entrypoint
+from hexagonal.integrations.sqlalchemy import (
     SQLALCHEMY_DATABASE_URL,
     SQLALCHEMY_ECHO,
     SQLALCHEMY_MAX_OVERFLOW,
@@ -20,8 +15,11 @@ from hexagonal.adapters.drivens.repository.sqlalchemy.env_vars import (
     SQLALCHEMY_POOL_RECYCLE,
     SQLALCHEMY_POOL_SIZE,
     SQLALCHEMY_POOL_TIMEOUT,
+    SQLAlchemyConnectionContextManager,
+    SQLAlchemyDatastore,
+    SQLAlchemyInfrastructure,
+    SQLAlchemyPairInboxOutbox,
 )
-from hexagonal.entrypoints import AppEntrypoint, Entrypoint
 
 # Cache for infrastructure instances to ensure same database URL reuses the same
 # datastore and connection manager. Key is the database URL.
