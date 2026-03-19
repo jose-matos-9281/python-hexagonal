@@ -12,7 +12,7 @@ from example.database.entidad import Afiliado as AfiliadoModel
 from example.database.entidad import Entidad as EntidadModel
 from example.database.entidad import TipoEntidad as TipoEntidadModel
 from example.shared.mapper_enum_tables import MapperEnumTables
-from hexagonal.adapters.drivens.repository.sqlalchemy import (
+from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyEntityRepositoryAdapter,
 )

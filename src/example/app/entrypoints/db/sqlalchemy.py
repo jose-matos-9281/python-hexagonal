@@ -6,12 +6,12 @@ from example.app.adapters.drivens.repository.sqlalchemy import (
 from example.app.adapters.drivers import exampleAppProxyAdapter
 from example.app.application import exampleApp
 from example.app.ports.drivers import IexampleApp
-from hexagonal.adapters.drivens.repository.sqlalchemy import (
+from hexagonal.entrypoints import Entrypoint
+from hexagonal.entrypoints.sqlalchemy import SQLAlchemyInfrastructureEntrypoint
+from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyDatastore,
 )
-from hexagonal.entrypoints import Entrypoint
-from hexagonal.entrypoints.sqlalchemy import SQLAlchemyInfrastructureEntrypoint
 
 
 class SQLAlchemyexampleEntrypoint(

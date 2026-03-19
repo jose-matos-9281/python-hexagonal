@@ -11,7 +11,8 @@ from example.contacto.adapters.drivens.repository.sqlalchemy import (
     SQLAlchemyEntidadContactoRepositoryAdapter,
     SQLAlchemyEntidadRepositoryAdapter,
 )
-from hexagonal.adapters.drivens.repository.sqlalchemy import (
+from hexagonal.application import ComposableInfrastructure, InfrastructureGroup
+from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyDatastore,
     SQLAlchemyInboxRepository,

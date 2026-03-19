@@ -1,0 +1,52 @@
+name: Adoption question
+description: Capture friction from first-time adopters without inventing unsupported guidance.
+title: "[adoption] "
+labels:
+  - documentation
+  - adoption
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - terminology
+        - bootstrap
+        - testing
+        - public-api-boundary
+        - repo-structure
+        - other
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Docs page
+      description: Which page or file left the user stuck?
+      placeholder: docs/getting-started/first-app.md
+  - type: textarea
+    id: question
+    attributes:
+      label: Question or friction
+      description: What did the adopter struggle with?
+    validations:
+      required: true
+  - type: dropdown
+    id: blocker
+    attributes:
+      label: Is this blocking adoption?
+      options:
+        - yes
+        - no
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or repo context
+      description: Link files, commands, or observations that show the confusion.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed follow-up
+      description: What should the docs or skill clarify next?
