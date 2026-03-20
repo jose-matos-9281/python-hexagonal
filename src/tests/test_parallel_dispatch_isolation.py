@@ -1,5 +1,6 @@
 import threading
 from pathlib import Path
+from typing import Any, cast
 
 from example.contacto.domain.shared import TipoContacto
 from tests.use_cases.base import bootstrap_example_stack
@@ -11,7 +12,7 @@ def test_write_scope_runner_isolates_worker_threads(tmp_path: Path):
         {"ENV_BUS": "inmemory"},
     )
 
-    runner = app.bus_app.infrastructure.write_scope_runner
+    runner = cast(Any, app.bus_app).infrastructure.write_scope_runner
     seen: dict[str, tuple[int, int, int]] = {}
 
     seen["main"] = runner.run_in_write_scope(
@@ -50,7 +51,7 @@ def test_write_scope_runner_reuses_same_scope_for_nested_same_thread_work(tmp_pa
         {"ENV_BUS": "inmemory"},
     )
 
-    runner = app.bus_app.infrastructure.write_scope_runner
+    runner = cast(Any, app.bus_app).infrastructure.write_scope_runner
 
     def outer(scope):
         current_scope_ids = (id(scope.uow), id(scope.uow.connection_manager))
@@ -76,7 +77,9 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
         },
     )
 
-    runner = app.bus_app.infrastructure.write_scope_runner
+    runner = cast(Any, app.bus_app).infrastructure.write_scope_runner
+    command_bus = cast(Any, app.command_bus)
+    event_bus = cast(Any, app.event_bus)
     main_scope = runner.run_in_write_scope(
         lambda scope: (
             threading.get_ident(),
@@ -86,7 +89,12 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
     )
 
     created_scopes: list[tuple[int, int, int]] = []
+    scoped_publish_usage: list[tuple[int, str, int, int]] = []
+    root_publish_usage: list[str] = []
     original_create_write_scope = runner._create_write_scope
+    root_outbox = command_bus.outbox_repository
+    original_root_fetch_pending = root_outbox.fetch_pending
+    original_root_mark_as_published = root_outbox.mark_as_published
 
     def record_write_scope():
         scope = original_create_write_scope()
@@ -97,9 +105,47 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
                 id(scope.uow.connection_manager),
             )
         )
+        scope_outbox = scope.outbox_repository
+        original_scope_fetch_pending = scope_outbox.fetch_pending
+        original_scope_mark_as_published = scope_outbox.mark_as_published
+
+        def scope_fetch_pending(*args, **kwargs):
+            scoped_publish_usage.append(
+                (
+                    threading.get_ident(),
+                    "fetch",
+                    id(scope.uow),
+                    id(scope_outbox),
+                )
+            )
+            return original_scope_fetch_pending(*args, **kwargs)
+
+        def scope_mark_as_published(*message_ids):
+            scoped_publish_usage.append(
+                (
+                    threading.get_ident(),
+                    "mark",
+                    id(scope.uow),
+                    id(scope_outbox),
+                )
+            )
+            return original_scope_mark_as_published(*message_ids)
+
+        scope_outbox.fetch_pending = scope_fetch_pending
+        scope_outbox.mark_as_published = scope_mark_as_published
         return scope
 
+    def root_fetch_pending(*args, **kwargs):
+        root_publish_usage.append("fetch")
+        return original_root_fetch_pending(*args, **kwargs)
+
+    def root_mark_as_published(*message_ids):
+        root_publish_usage.append("mark")
+        return original_root_mark_as_published(*message_ids)
+
     runner._create_write_scope = record_write_scope
+    root_outbox.fetch_pending = root_fetch_pending
+    root_outbox.mark_as_published = root_mark_as_published
     created_event = {}
     contacto_api = api.contacto.contacto
 
@@ -119,9 +165,9 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
 
         assert response.has_events is False
 
-        app.command_bus.publish_from_outbox()
-        app.command_bus.queue.join()
-        app.event_bus.queue.join()
+        command_bus.publish_from_outbox()
+        command_bus.queue.join()
+        event_bus.queue.join()
 
         created = created_event.get("value")
         assert created is not None
@@ -131,11 +177,30 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
         )
 
         worker_scopes = [scope for scope in created_scopes if scope[0] != main_scope[0]]
+        publish_scopes = [
+            scope for scope in created_scopes if scope[1] != main_scope[1]
+        ]
+        main_thread_publish_usage = [
+            entry for entry in scoped_publish_usage if entry[0] == main_scope[0]
+        ]
 
         assert worker_scopes
         assert all(scope[1] != main_scope[1] for scope in worker_scopes)
         assert all(scope[2] != main_scope[2] for scope in worker_scopes)
+        assert root_publish_usage == []
+        assert [operation for _, operation, _, _ in main_thread_publish_usage] == [
+            "fetch",
+            "mark",
+        ]
+        assert publish_scopes
+        assert all(scope[1] != main_scope[1] for scope in publish_scopes)
+        assert (
+            len({repository_id for _, _, _, repository_id in main_thread_publish_usage})
+            == 1
+        )
     finally:
         runner._create_write_scope = original_create_write_scope
-        app.command_bus.shutdown()
-        app.event_bus.shutdown()
+        root_outbox.fetch_pending = original_root_fetch_pending
+        root_outbox.mark_as_published = original_root_mark_as_published
+        command_bus.shutdown()
+        event_bus.shutdown()

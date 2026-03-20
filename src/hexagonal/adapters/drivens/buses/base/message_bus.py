@@ -46,33 +46,47 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
 
     def save_to_outbox(self, *messages: CloudMessage[Any]) -> None:
         self.verify()
-        if self._write_scope_runner is None or self._outbox_repository_getter is None:
-            self.outbox_repository.save(*messages)
-            return
-        outbox_repository_getter = self._outbox_repository_getter
-
-        scope = self._write_scope_runner.current_write_scope
-        if scope is not None:
-            outbox_repository_getter(scope).save(*messages)
-            return
-
-        self._write_scope_runner.run_in_write_scope(
-            lambda write_scope: outbox_repository_getter(write_scope).save(*messages)
+        self._run_with_outbox_repository(
+            lambda outbox_repository: outbox_repository.save(*messages)
         )
 
     # publish
     def publish_from_outbox(self, limit: int | None = None) -> None:
         self.verify()
-        messages = self.outbox_repository.fetch_pending(limit=limit)
-        self._publish_messages(*messages)
+        self._run_with_outbox_repository(
+            lambda outbox_repository: self._publish_messages(
+                outbox_repository,
+                *outbox_repository.fetch_pending(limit=limit),
+            )
+        )
 
-    def _publish_messages(self, *messages: CloudMessage[Any]) -> None:
+    def _run_with_outbox_repository(
+        self,
+        work: Callable[[IOutboxRepository[TManager]], Any],
+    ) -> Any:
+        if self._write_scope_runner is None or self._outbox_repository_getter is None:
+            return work(self.outbox_repository)
+
+        outbox_repository_getter = self._outbox_repository_getter
+        scope = self._write_scope_runner.current_write_scope
+        if scope is not None:
+            return work(outbox_repository_getter(scope))
+
+        return self._write_scope_runner.run_in_write_scope(
+            lambda write_scope: work(outbox_repository_getter(write_scope))
+        )
+
+    def _publish_messages(
+        self,
+        outbox_repository: IOutboxRepository[TManager],
+        *messages: CloudMessage[Any],
+    ) -> None:
         for message in messages:
             try:
                 self._publish_message(message)
-                self.outbox_repository.mark_as_published(message.message_id)
+                outbox_repository.mark_as_published(message.message_id)
             except Exception as e:
-                self.outbox_repository.mark_as_failed(message.message_id, error=str(e))
+                outbox_repository.mark_as_failed(message.message_id, error=str(e))
 
     @abstractmethod
     def _publish_message(self, message: CloudMessage[Any]) -> None: ...
