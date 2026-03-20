@@ -1,4 +1,4 @@
-from typing import Any, Generic, Type, cast
+from typing import Any, Generic, Type
 
 from .aggregate import TAggregateOrEntity, TIdEntity
 from .base import QueryOne, ValueObject
@@ -18,5 +18,5 @@ class GetById(
     ) -> "GetById[TAggregateOrEntity, TIdEntity]":
         return cls(
             id=id,
-            view=cast(type[AggregateView[TAggregateOrEntity]], AggregateView),
+            view=AggregateView[agg_type],  # type: ignore
         )
