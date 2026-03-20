@@ -132,7 +132,7 @@ class AggregateRoot(BaseAggregate[UUID], Generic[TIdEntity, TSnapshotState]):
 
     @classmethod
     def create_id(cls, *args: Any, **kwargs: Any) -> UUID:
-        return cls._id_type.new(*args, **kwargs).value  # type: ignore
+        return cls._id_type.new(*args, **kwargs).value
 
     @property
     def value_id(self) -> TIdEntity:

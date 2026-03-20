@@ -13,6 +13,8 @@ two-line snippet is enough.
   [`docs/explanation/architecture-from-example.md`](docs/explanation/architecture-from-example.md)
 - Bootstrap the adapter-specific SQLAlchemy path:
   [`docs/how-to/bootstrap-sqlalchemy-app.md`](docs/how-to/bootstrap-sqlalchemy-app.md)
+- Migrate existing apps to the scoped execution model:
+  [`docs/how-to/migrate-to-0.3.0-scoped-execution.md`](docs/how-to/migrate-to-0.3.0-scoped-execution.md)
 - Learn the canonical testing workflow:
   [`docs/how-to/test-use-cases.md`](docs/how-to/test-use-cases.md)
 - Check the guardrails before copying imports:
@@ -57,6 +59,8 @@ The documented path is intentionally narrow.
   `hexagonal.entrypoints`
 - Reach for `hexagonal.integrations.sqlalchemy` when you need the reusable
   SQLAlchemy repository and unit-of-work utilities
+- Treat scoped execution as the default mental model: shared datastore and
+  mapper, fresh write/read scope per operation
 - Treat `hexagonal.entrypoints.sqlalchemy` as adapter-specific convenience, not
   the whole framework story
 - Do not treat `hexagonal.__init__` as the public integration surface; right now

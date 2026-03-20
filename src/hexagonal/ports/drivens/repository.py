@@ -178,3 +178,20 @@ class IPairInboxOutbox(IBaseInfrastructure, Generic[TManager]):
 
 
 TRepository = TypeVar("TRepository", bound=IBaseRepository[Any])
+
+
+__all__ = [
+    "ExecutionScope",
+    "IConnectionManager",
+    "IAggregateRepository",
+    "IBaseRepository",
+    "IEntityRepository",
+    "IInboxRepository",
+    "IOutboxRepository",
+    "IPairInboxOutbox",
+    "ISearchRepository",
+    "IUnitOfWork",
+    "TAggregate",
+    "TManager",
+    "TRepository",
+]

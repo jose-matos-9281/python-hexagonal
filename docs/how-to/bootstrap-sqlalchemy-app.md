@@ -56,10 +56,10 @@ The SQLAlchemy-specific infrastructure lives in
 
 The important pattern is:
 
-- accept a mapper and connection manager
-- create a unit of work
-- build the infrastructure needed by the bounded context
-- group those pieces into one object that satisfies the application ports
+- accept a mapper and datastore
+- expose factories that create fresh read and write scopes
+- build repositories and unit of work inside those scopes
+- group those factories into one object that satisfies the application ports
 
 Conceptually the shape looks like this:
 
@@ -70,12 +70,21 @@ from hexagonal.integrations.sqlalchemy import SQLAlchemyUnitOfWork
 
 class YourSQLAlchemyInfrastructure(InfrastructureGroup):
     def __init__(self, mapper, manager):
-        self._uow = SQLAlchemyUnitOfWork(connection_manager=manager)
-        self._context = YourContextInfrastructure(manager, mapper, self._uow)
-        super().__init__(self._context & self._uow)
+        self._mapper = mapper
+        self._datastore = datastore
+
+    def create_read_scope(self):
+        return SQLAlchemyConnectionContextManager(self._datastore)
+
+    def create_write_scope(self):
+        manager = self.create_read_scope()
+        repository = YourRepository(self._mapper, manager)
+        uow = SQLAlchemyUnitOfWork(repository, connection_manager=manager)
+        return YourWriteScope(uow=uow, repository=repository)
 ```
 
-Copy the role separation, not the example class names.
+Copy the role separation, not the example class names. In `0.3.0`, the thing to
+copy is scoped execution, not a singleton `uow` sitting in app state.
 
 ## Step 3: create the application from infrastructure
 
@@ -87,7 +96,7 @@ The example app creation happens in two layers:
 The bootstrap rule is boring on purpose:
 
 1. infrastructure verifies itself
-2. each focused app is created with the dependencies it needs
+2. each focused app is created with the infrastructure and scope providers it needs
 3. one top-level app groups the result
 
 If your bootstrap needs ten conditionals and half a framework container before
@@ -170,6 +179,17 @@ Do NOT do this:
 
 The supported boundary is documented in `docs/reference/supported-surface.md`.
 
+## Step 5.5: stop sharing live write objects
+
+If you already have an app on older versions, this is the rule that matters:
+
+- share datastore, mapper, and factories
+- do NOT share a live `UnitOfWork`
+- do NOT reuse repositories across parallel dispatches
+- register handlers through providers that resolve dependencies inside a scope
+
+That is the architectural shift in `0.3.0`.
+
 ## Step 6: verify bootstrap through the same path tests use
 
 The example tests do NOT instantiate random internals directly.
@@ -183,4 +203,5 @@ lying to you.
 
 1. `docs/how-to/test-use-cases.md`
 2. `docs/reference/supported-surface.md`
-3. `docs/reference/evidence-map.yaml`
+3. `docs/how-to/migrate-to-0.3.0-scoped-execution.md`
+4. `docs/reference/evidence-map.yaml`

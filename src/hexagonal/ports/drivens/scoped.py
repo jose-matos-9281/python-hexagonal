@@ -22,6 +22,9 @@ class IReadScopeFactory(Protocol, Generic[TReadScope_co]):
 
 
 class IWriteScopeRunner(Protocol, Generic[TWriteScope_co]):
+    @property
+    def current_write_scope(self) -> TWriteScope_co | None: ...
+
     def run_in_write_scope(
         self, work: Callable[[TWriteScope_co], TResult]
     ) -> TResult: ...
