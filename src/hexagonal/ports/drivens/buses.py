@@ -14,6 +14,7 @@ from hexagonal.domain import (
     TQuery,
     TView,
 )
+from hexagonal.ports.drivens.scoped import IWriteScopeRunner, TWriteScope
 
 from .application import IMessageHandler, IQueryHandler
 from .infrastructure import IBaseInfrastructure
@@ -43,8 +44,8 @@ class IBaseMessageBus(IBaseInfrastructure, ABC, Generic[TManager]):
     def configure_scope_runtime(
         self,
         *,
-        write_scope_runner: Any | None = None,
-        outbox_repository_getter: Callable[[Any], IOutboxRepository[TManager]]
+        write_scope_runner: IWriteScopeRunner[TWriteScope] | None = None,
+        outbox_repository_getter: Callable[..., IOutboxRepository[TManager]]
         | None = None,
     ) -> None:
         """Configurar acceso a repositorios scope-aware para outbox."""
@@ -74,7 +75,7 @@ class ICommandBus(IBaseMessageBus[TManager], ABC):
     @abstractmethod
     def dispatch(
         self,
-        command: TCommand | CloudMessage[TCommand],
+        command: CloudMessage[TCommand],
         *,
         to_outbox: bool = False,
     ) -> None:

@@ -1,4 +1,4 @@
-from typing import Any, Generic, List, Mapping, cast
+from typing import Any, Generic, List, Mapping
 
 from hexagonal.domain import (
     AggregateView,
@@ -37,7 +37,9 @@ class SearchAggregateRepository(
         self, query: GetById[TAggregate | TEntity, TIdEntity]
     ) -> List[AggregateView[TAggregate | TEntity]]:
         aggregate = self._repo.get(query.id)
-        return [cast(AggregateView[TAggregate | TEntity], AggregateView.new(aggregate))]
+        return [
+            AggregateView[type(aggregate)].new(aggregate)  # type: ignore
+        ]  # no cambiar los test se rompen
 
     ## decorate methods from IAggregateRepository to pass through initialization ##
     def initialize(self, env: Mapping[str, str]) -> None:

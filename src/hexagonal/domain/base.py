@@ -31,7 +31,7 @@ class HasTopic:
             set_topic = actual_topic
         else:
             set_topic = f"{base_topic}{'.' if base_topic != '' else ''}{new_topic}"
-        cls.TOPIC = set_topic
+        cls.TOPIC = set_topic  # pyright: ignore[reportConstantRedefinition]
 
 
 class Inmutable(BaseModel):

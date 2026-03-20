@@ -1,10 +1,9 @@
-from typing import Any, Mapping, Type, cast
+from typing import Any, Mapping, Type
 
 from eventsourcing.utils import get_topic
 
 from hexagonal.domain import (
     CloudMessage,
-    Command,
     HandlerAlreadyRegistered,
     HandlerNotRegistered,
     TCommand,
@@ -52,18 +51,16 @@ class BaseCommandBus(ICommandBus[TManager], MessageBus[TManager]):
             raise HandlerNotRegistered(f"Command: {name}")
 
     def dispatch(
-        self, command: TCommand | CloudMessage[TCommand], *, to_outbox: bool = False
+        self,
+        command: CloudMessage[TCommand],
+        *,
+        to_outbox: bool = False,
     ) -> None:
         self.verify()
-        cmd = (
-            command
-            if not isinstance(command, Command)
-            else cast(CloudMessage[TCommand], CloudMessage.new(command))
-        )
         if to_outbox:
-            self.save_to_outbox(cmd)
+            self.save_to_outbox(command)
         else:
-            self.process_command(cmd)
+            self.process_command(command)
 
     def process_command(self, command: CloudMessage[TCommand]) -> None:
         self._process_messages(command)

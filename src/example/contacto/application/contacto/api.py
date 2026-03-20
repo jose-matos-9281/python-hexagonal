@@ -8,8 +8,7 @@ from example.contacto.domain.contacto import (
     GetContactoById,
 )
 from example.contacto.domain.shared import TipoContacto
-from hexagonal.application import BaseAPI, TBaseApp
-from hexagonal.application.api import ApiCommandResponse
+from hexagonal.application import ApiCommandResponse, BaseAPI, TBaseApp
 from hexagonal.domain import AggregateSnapshot, TEvento
 
 from .use_cases import (

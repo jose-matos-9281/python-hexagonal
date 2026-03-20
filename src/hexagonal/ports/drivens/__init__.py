@@ -16,16 +16,18 @@ from .repository import (
     IInboxRepository,
     IOutboxRepository,
     IPairInboxOutbox,
-    IReadScopeFactory,
-    IReadScopeRunner,
     ISearchRepository,
     IUnitOfWork,
-    IWriteScopeFactory,
-    IWriteScopeRunner,
     TAggregate,
     TManager,
-    TReadScope,
     TRepository,
+)
+from .scoped import (
+    IReadScopeFactory,
+    IReadScopeRunner,
+    IWriteScopeFactory,
+    IWriteScopeRunner,
+    TReadScope,
     TResult,
     TWriteScope,
 )

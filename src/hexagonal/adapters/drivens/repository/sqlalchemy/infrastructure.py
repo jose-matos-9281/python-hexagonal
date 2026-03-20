@@ -5,7 +5,7 @@ from typing import Callable, Generic, Mapping, TypeVar, cast
 
 from hexagonal.adapters.drivens.mappers import MessageMapper
 from hexagonal.application import Infrastructure
-from hexagonal.ports.drivens.repository import TResult
+from hexagonal.ports.drivens import TResult
 
 from .datastore import SQLAlchemyConnectionContextManager, SQLAlchemyDatastore
 

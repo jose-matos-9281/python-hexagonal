@@ -3,7 +3,7 @@ from uuid import UUID
 
 from example.contacto.domain.entidad import Entidad, GetEntidadById
 from example.contacto.domain.shared import IdEntidad, TipoEntidad
-from hexagonal.application.api import ApiCommandResponse, BaseAPI, TBaseApp
+from hexagonal.application import ApiCommandResponse, BaseAPI, TBaseApp
 from hexagonal.domain import TEvento
 
 from .use_cases import (

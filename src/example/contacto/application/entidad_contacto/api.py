@@ -6,7 +6,7 @@ from example.contacto.domain.entidad_contacto import (
     EntidadExampletate,
     ValidacionEntidadContacto,
 )
-from hexagonal.application.api import ApiCommandResponse, BaseAPI, TBaseApp
+from hexagonal.application import ApiCommandResponse, BaseAPI, TBaseApp
 from hexagonal.domain import AggregateSnapshot, TEvento
 
 from .use_cases import (

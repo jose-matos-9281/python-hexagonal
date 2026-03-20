@@ -1,4 +1,4 @@
-from hexagonal.domain import CloudMessage, TCommand, TEvent
+from hexagonal.domain import CloudMessage, CommandOutcome, TCommand, TEvento
 from hexagonal.ports.drivens import (
     IBusInfrastructure,
     ICommandBus,
@@ -39,8 +39,8 @@ class ApplicationProxyAdapter(IBaseApplication[TManager]):
     def dispatch_and_wait_events(
         self,
         command: CloudMessage[TCommand],
-        *event_types: type[TEvent],
-    ) -> dict[type[TEvent], TEvent | None]:
+        *event_types: type[TEvento],
+    ) -> CommandOutcome[TCommand]:
         return self._application.dispatch_and_wait_events(command, *event_types)
 
 

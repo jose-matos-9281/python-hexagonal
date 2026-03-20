@@ -1,3 +1,6 @@
+from hexagonal.domain import CommandOutcome as ApiCommandResponse
+from hexagonal.domain import EventOutcome as ApiEventResponse
+
 from .api import BaseAPI, GetEvent, TBaseApp
 from .app import Application
 from .bus_app import BusAppGroup, ComposableBusApp
@@ -27,6 +30,8 @@ from .query import (
 from .topics import RegisterTopics
 
 __all__ = [
+    "ApiCommandResponse",
+    "ApiEventResponse",
     "TBaseApp",
     "BaseAPI",
     "GetEvent",

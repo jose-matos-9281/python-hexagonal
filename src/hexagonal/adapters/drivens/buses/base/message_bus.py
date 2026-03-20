@@ -9,6 +9,7 @@ from hexagonal.ports.drivens import (
     IOutboxRepository,
     TManager,
 )
+from hexagonal.ports.drivens.scoped import IWriteScopeRunner, TWriteScope
 
 
 class MessageBus(IBaseMessageBus[TManager], Infrastructure):
@@ -19,7 +20,7 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
     ) -> None:
         self._inbox_repository = inbox_repository
         self._outbox_repository = outbox_repository
-        self._write_scope_runner: Any | None = None
+        self._write_scope_runner: IWriteScopeRunner[Any] | None = None
         self._outbox_repository_getter: (
             Callable[[Any], IOutboxRepository[TManager]] | None
         ) = None
@@ -36,8 +37,8 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
     def configure_scope_runtime(
         self,
         *,
-        write_scope_runner: Any | None = None,
-        outbox_repository_getter: Callable[[Any], IOutboxRepository[TManager]]
+        write_scope_runner: IWriteScopeRunner[TWriteScope] | None = None,
+        outbox_repository_getter: Callable[[TWriteScope], IOutboxRepository[TManager]]
         | None = None,
     ) -> None:
         self._write_scope_runner = write_scope_runner
@@ -48,7 +49,6 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
         if self._write_scope_runner is None or self._outbox_repository_getter is None:
             self.outbox_repository.save(*messages)
             return
-
         outbox_repository_getter = self._outbox_repository_getter
 
         scope = self._write_scope_runner.current_write_scope

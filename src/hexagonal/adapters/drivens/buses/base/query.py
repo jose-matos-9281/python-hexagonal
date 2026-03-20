@@ -15,6 +15,7 @@ from hexagonal.domain import (
     TView,
 )
 from hexagonal.ports.drivens import IQueryBus, IQueryHandler, TManager
+from hexagonal.ports.drivens.scoped import IReadScopeRunner
 
 
 class QueryBus(IQueryBus[TManager], Infrastructure):
@@ -22,11 +23,11 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
 
     def initialize(self, env: Mapping[str, str]) -> None:
         self.handlers = {}
-        self._read_scope_runner = None
+        self._read_scope_runner: IReadScopeRunner[Any] | None = None
         super().initialize(env)
 
     def configure_read_scope_runtime(
-        self, read_scope_runner: Any | None = None
+        self, read_scope_runner: IReadScopeRunner[Any] | None = None
     ) -> None:
         self._read_scope_runner = read_scope_runner
 

@@ -1,6 +1,7 @@
-from typing import Dict, Generic, Type
+from typing import Generic, Type
 
-from hexagonal.domain import CloudMessage, TCommand, TEvent
+from hexagonal.domain import CloudMessage, CommandOutcome, TCommand, TEvent
+from hexagonal.domain.base import TEvento
 from hexagonal.ports.drivens import (
     IBusInfrastructure,
     ICommandBus,
@@ -62,12 +63,17 @@ class Application(IBaseApplication[TManager]):
     def dispatch_and_wait_events(
         self,
         command: CloudMessage[TCommand],
-        *event_types: Type[TEvent],
-    ) -> Dict[Type[TEvent], TEvent | None]:
-        handlers: list[tuple[Type[TEvent], GetEvent[TEvent]]] = [
-            (event_type, GetEvent[TEvent]()) for event_type in event_types
-        ]
-        for event_type, handler in handlers:
+        *event_types: Type[TEvento],
+    ) -> CommandOutcome[TCommand]:
+        handlers: dict[Type[TEvento], GetEvent[TEvento]] = {}
+        for event_type in event_types:
+            handler = GetEvent[TEvento]()
+            handlers[event_type] = handler
             self.event_bus.wait_for_publish(event_type, handler)
         self.command_bus.dispatch(command)
-        return {event_type: handler.event for event_type, handler in handlers}
+        return CommandOutcome(
+            command=command,
+            events={
+                event_type: handler.event for event_type, handler in handlers.items()
+            },
+        )
