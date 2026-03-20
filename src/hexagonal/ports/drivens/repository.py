@@ -1,16 +1,10 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Generic, Self, Sequence, TypeVar
+from dataclasses import dataclass
+from typing import Any, Generic, Mapping, Self, Sequence, TypeVar
 from uuid import UUID
 
-from hexagonal.domain import (
-    CloudMessage,
-    TAggregate,
-    TEntity,
-    TIdEntity,
-    TQuery,
-    TView,
-)
+from hexagonal.domain import CloudMessage, TAggregate, TEntity, TIdEntity, TQuery, TView
 
 from .infrastructure import IBaseInfrastructure
 
@@ -30,10 +24,20 @@ class IBaseRepository(IBaseInfrastructure, Generic[TManager]):
     def connection_manager(self) -> TManager: ...
 
     @abstractmethod
+    # Compatibility shim for legacy singleton-UoW wiring. New scope-based flows
+    # construct repositories with the correct manager and should not rely on this.
     def attach_to_unit_of_work(self, uow: "IUnitOfWork[TManager]") -> None: ...
 
     @abstractmethod
+    # Compatibility shim paired with attach_to_unit_of_work(); remove once Phase 5
+    # eliminates legacy mutable attachment paths.
     def detach_from_unit_of_work(self) -> None: ...
+
+
+@dataclass(frozen=True)
+class ExecutionScope(Generic[TManager]):
+    uow: "IUnitOfWork[TManager]"
+    repositories: Mapping[str, IBaseRepository[TManager]]
 
 
 class IUnitOfWork(IBaseInfrastructure, ABC, Generic[TManager]):
@@ -48,9 +52,11 @@ class IUnitOfWork(IBaseInfrastructure, ABC, Generic[TManager]):
     def rollback(self) -> None: ...
 
     @abstractmethod
+    # Compatibility shim for legacy registration paths only.
     def attach_repo(self, repo: IBaseRepository[TManager]) -> None: ...
 
     @abstractmethod
+    # Compatibility shim for legacy registration paths only.
     def detach_repo(self, repo: IBaseRepository[TManager]) -> None: ...
 
     def __enter__(self) -> Self:
@@ -172,3 +178,20 @@ class IPairInboxOutbox(IBaseInfrastructure, Generic[TManager]):
 
 
 TRepository = TypeVar("TRepository", bound=IBaseRepository[Any])
+
+
+__all__ = [
+    "ExecutionScope",
+    "IConnectionManager",
+    "IAggregateRepository",
+    "IBaseRepository",
+    "IEntityRepository",
+    "IInboxRepository",
+    "IOutboxRepository",
+    "IPairInboxOutbox",
+    "ISearchRepository",
+    "IUnitOfWork",
+    "TAggregate",
+    "TManager",
+    "TRepository",
+]

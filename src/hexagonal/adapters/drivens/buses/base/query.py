@@ -15,6 +15,7 @@ from hexagonal.domain import (
     TView,
 )
 from hexagonal.ports.drivens import IQueryBus, IQueryHandler, TManager
+from hexagonal.ports.drivens.scoped import IReadScopeRunner
 
 
 class QueryBus(IQueryBus[TManager], Infrastructure):
@@ -22,7 +23,13 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
 
     def initialize(self, env: Mapping[str, str]) -> None:
         self.handlers = {}
+        self._read_scope_runner: IReadScopeRunner[Any] | None = None
         super().initialize(env)
+
+    def configure_read_scope_runtime(
+        self, read_scope_runner: IReadScopeRunner[Any] | None = None
+    ) -> None:
+        self._read_scope_runner = read_scope_runner
 
     def _get_name(self, query_type: Type[QueryBase[TView]]) -> str:
         return get_topic(query_type)
@@ -37,14 +44,14 @@ class QueryBus(IQueryBus[TManager], Infrastructure):
         self,
         query_type: Type[TQuery],
         handler: IQueryHandler[TManager, TQuery, TView],
-    ):
+    ) -> None:
         self.verify()
         name = self._get_name(query_type)
         if name in self.handlers:
             raise HandlerAlreadyRegistered(f"Query: {name}")
         self.handlers[name] = handler
 
-    def unregister_handler(self, query_type: Type[TQuery]):
+    def unregister_handler(self, query_type: Type[TQuery]) -> None:
         self.verify()
         name = self._get_name(query_type)
         if name in self.handlers:

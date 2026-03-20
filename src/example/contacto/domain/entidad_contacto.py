@@ -1,9 +1,10 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Self
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from example.contacto.domain.shared import IdContacto, IdEntidad, IdUsuario
+from hexagonal.application import AggregateView
 from hexagonal.domain import (
     AggregateRoot,
     GetById,
@@ -21,7 +22,7 @@ class IdEntidadContacto(IdValueObject):
         entidad: IdEntidad | UUID,
         contacto: IdContacto | UUID,
         **__: Any,
-    ):
+    ) -> Self:
         entidad = IdEntidad.from_value(entidad)
         contacto = IdContacto.from_value(contacto)
         return cls(
@@ -66,27 +67,54 @@ class EntidadContacto(AggregateRoot[IdEntidadContacto, EntidadExampletate]):
         self.usuario_validacion: IdUsuario | None = None
 
     @classmethod
-    def create_id(cls, entidad: IdEntidad, contacto: IdContacto, *_, **__: Any):
-        return super().create_id(entidad=entidad, contacto=contacto)
+    def create_id(
+        cls,
+        entidad: IdEntidad,
+        contacto: IdContacto,
+        *_: Any,
+        **__: Any,
+    ) -> UUID:
+        return IdEntidadContacto.new(entidad=entidad, contacto=contacto).value
+
+    def complete_snapshot_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        super().complete_snapshot_state(state)
+        state["id_entidad_contacto"] = self.value_id
+        return state
 
     def _marcar_validacion(
         self, validacion: ValidacionEntidadContacto, usuario: IdUsuario
-    ):
+    ) -> None:
         self.validacion = validacion
         self.usuario_validacion = usuario
         self.fecha_validacion = self.Event.create_timestamp()
 
     @command("marcarEntidadContactoCorrecta")
-    def marcar_entidad_contacto_correcta(self, usuario: IdUsuario):
+    def marcar_entidad_contacto_correcta(self, usuario: IdUsuario) -> None:
         self._marcar_validacion(ValidacionEntidadContacto.CORRESPONDE, usuario)
 
     @command("marcarEntidadContactoIncorrecta")
-    def marcar_entidad_contacto_incorrecta(self, usuario: IdUsuario):
+    def marcar_entidad_contacto_incorrecta(self, usuario: IdUsuario) -> None:
         self._marcar_validacion(ValidacionEntidadContacto.NO_CORRESPONDE, usuario)
+
+
+class EntidadContactoView(AggregateView[EntidadContacto]):
+    pass
 
 
 class GetEntidadContactoById(GetById[EntidadContacto, IdEntidadContacto]):
     @classmethod
-    def new(cls, id: IdEntidadContacto | UUID, *_: Any, **__: Any):
+    def new(
+        cls, id: IdEntidadContacto | UUID, *_: Any, **__: Any
+    ) -> "GetEntidadContactoById":
         id = IdEntidadContacto.from_value(id)
-        return super().new(id=id, agg_type=EntidadContacto)
+        return cls(id=id, view=EntidadContactoView)
+
+
+__all__ = [
+    "EntidadContacto",
+    "EntidadExampletate",
+    "EntidadContactoView",
+    "GetEntidadContactoById",
+    "IdEntidadContacto",
+    "ValidacionEntidadContacto",
+]

@@ -21,7 +21,7 @@ class BusEntrypoint(Entrypoint[IBusInfrastructure[TManager]], ABC):
     OUTBOX: Type[Entrypoint[IPairInboxOutbox[TManager]]]
 
     @classmethod
-    def setOutbox(cls, outbox: Type[Entrypoint[IPairInboxOutbox[TManager]]]):
+    def setOutbox(cls, outbox: Type[Entrypoint[IPairInboxOutbox[TManager]]]) -> None:
         cls.OUTBOX = outbox
 
 
@@ -29,7 +29,9 @@ class InMemoryBusEntrypoint(BusEntrypoint[TManager]):
     name = "inmemory"
 
     @classmethod
-    def get(cls, env: Optional[Mapping[str, str]] = None):
+    def get(
+        cls, env: Optional[Mapping[str, str]] = None
+    ) -> IBusInfrastructure[TManager]:
         env = cls.construct_env(env)
         outbox = cls.OUTBOX.get(env)
         logger.info("Using %s for events", type(outbox).__name__)
@@ -42,7 +44,9 @@ class InMemoryQueueBusEntrypoint(BusEntrypoint[TManager]):
     name = "inmemory_queue"
 
     @classmethod
-    def get(cls, env: Optional[Mapping[str, str]] = None):
+    def get(
+        cls, env: Optional[Mapping[str, str]] = None
+    ) -> IBusInfrastructure[TManager]:
         env = cls.construct_env(env)
         outbox = cls.OUTBOX.get(env)
         logger.info("Using %s for events", type(outbox).__name__)
@@ -66,3 +70,11 @@ class BusEntrypointGroup(EntrypointGroup[IBusInfrastructure[TManager]]):
         entry = super().getEntrypoint(env)
 
         return cast(Type[BusEntrypoint[TManager]], entry)
+
+
+__all__ = [
+    "BusEntrypoint",
+    "BusEntrypointGroup",
+    "InMemoryBusEntrypoint",
+    "InMemoryQueueBusEntrypoint",
+]

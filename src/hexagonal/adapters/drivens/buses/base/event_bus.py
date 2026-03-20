@@ -21,22 +21,36 @@ logger = logging.getLogger(__name__)
 class HandlerError(Exception):
     def __init__(
         self,
-        evento: CloudMessage[TEvento],
+        evento: CloudMessage[TEvento] | TEvento,
         handler: IMessageHandler[TEvent] | Callable[..., None],
         error: Exception,
-    ):
-        super().__init__(f"""
-Error al Manejar Evento {evento.__class__.__name__}
-    handler: {
-            handler.__class__.__name__  # pyright: ignore[reportUnknownMemberType]
+    ) -> None:
+        handler_name = (
+            handler.__class__.__name__
             if isinstance(handler, IMessageHandler)
             else handler.__name__
-        }   
-    evento: {evento.type}
-    datos: {evento.model_dump_json(indent=2)}
+        )
+        event_name = (
+            evento.__class__.__name__
+            if not isinstance(evento, CloudMessage)
+            else evento.payload.__class__.__name__
+        )
+        event_topic = (
+            evento.TOPIC if not isinstance(evento, CloudMessage) else evento.type
+        )
+        event_dump = (
+            evento.model_dump_json(indent=2)
+            if not isinstance(evento, CloudMessage)
+            else evento.model_dump_json(indent=2)
+        )
+        super().__init__(f"""
+Error al Manejar Evento {event_name}
+    handler: {handler_name}
+    evento: {event_topic}
+    datos: {event_dump}
     error: {error}
     stacktrace: {error.__traceback__}
-        """)  # type: ignore  # noqa: E501
+        """)
 
 
 class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
@@ -52,6 +66,9 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
     def _get_key(self, obj: Type[TEvent] | IMessageHandler[TEvent]) -> str:
         if not isinstance(obj, IMessageHandler):
             return get_topic(obj)
+        handler_key = getattr(obj, "handler_key", None)
+        if isinstance(handler_key, str):
+            return handler_key
         try:
             return get_topic(obj.__class__)
         except TopicError as e:
@@ -59,7 +76,9 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
                 f"Handler: {obj.__class__}, error: {e}"
             ) from e
 
-    def subscribe(self, event_type: Type[TEvent], handler: IMessageHandler[TEvent]):
+    def subscribe(
+        self, event_type: Type[TEvent], handler: IMessageHandler[TEvent]
+    ) -> None:
         self.verify()
         key_event = self._get_key(event_type)
         handlers = self.handlers.get(key_event, {})
@@ -69,7 +88,9 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
         handlers[key_handler] = handler
         self.handlers[key_event] = handlers
 
-    def unsubscribe(self, event_type: Type[TEvent], *handlers: IMessageHandler[TEvent]):
+    def unsubscribe(
+        self, event_type: Type[TEvent], *handlers: IMessageHandler[TEvent]
+    ) -> None:
         self.verify()
         key_event = self._get_key(event_type)
         if not handlers:
@@ -88,7 +109,9 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
         if not list(self.handlers[key_event].values()):
             del self.handlers[key_event]
 
-    def _wait_for(self, event_type: Type[TEvent], handler: Callable[[TEvent], None]):
+    def _wait_for(
+        self, event_type: Type[TEvent], handler: Callable[[TEvent], None]
+    ) -> None:
         name = self._get_key(event_type)
         if name not in self.wait_list:
             self.wait_list[name] = []
@@ -99,7 +122,7 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
             len(self.wait_list[name]),
         )
 
-    def _handle_wait_list(self, event: TEvento):
+    def _handle_wait_list(self, event: TEvento) -> None:
         event_type = type(event)
         key = self._get_key(event_type)
         logger.debug("    [DEBUG _handle_wait_list] Publishing event type=%s", key)
@@ -112,14 +135,17 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
             logger.debug("    [DEBUG _handle_wait_list] No handlers registered!")
         while wait_list:
             if self.raise_error:
-                handler = wait_list.pop()
-                handler(event)
+                immediate_handler = wait_list.pop()
+                immediate_handler(event)
             else:
+                queued_handler: Callable[[TEvento], None] | None = None
                 try:
-                    handler = wait_list.pop()
-                    handler(event)
+                    queued_handler = wait_list.pop()
+                    queued_handler(event)
                 except Exception as e:
-                    raise HandlerError(event, handler, e) from e  # type: ignore
+                    if queued_handler is None:
+                        raise
+                    raise HandlerError(event, queued_handler, e) from e
 
     @overload
     def wait_for_publish(
@@ -136,9 +162,10 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
     ) -> Callable[[Callable[[TEvent], None]], None] | None:
         self.verify()
         if handler:
-            return self._wait_for(event_type, handler)
+            self._wait_for(event_type, handler)
+            return None
 
-        def decorator(func: Callable[[TEvent], None]):
+        def decorator(func: Callable[[TEvent], None]) -> None:
             self._wait_for(event_type, func)
 
         return decorator
@@ -169,4 +196,4 @@ class BaseEventBus(IEventBus[TManager], MessageBus[TManager]):
             logger.error(e)
 
     def process_events(self, *events: CloudMessage[TEvent]) -> None:
-        return self._process_messages(*events)
+        self._process_messages(*events)

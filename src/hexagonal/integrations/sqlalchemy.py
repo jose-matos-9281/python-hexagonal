@@ -15,6 +15,7 @@ from hexagonal.adapters.drivens.repository.sqlalchemy import (
     SQLAlchemyOutboxRepository,
     SQLAlchemyPairInboxOutbox,
     SQLAlchemyRepositoryAdapter,
+    SQLAlchemyScopeRunner,
     SQLAlchemySearchRepositoryAdapter,
     SQLAlchemyUnitOfWork,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "SQLAlchemyOutboxRepository",
     "SQLAlchemyPairInboxOutbox",
     "SQLAlchemyRepositoryAdapter",
+    "SQLAlchemyScopeRunner",
     "SQLAlchemySearchRepositoryAdapter",
     "SQLAlchemyUnitOfWork",
 ]

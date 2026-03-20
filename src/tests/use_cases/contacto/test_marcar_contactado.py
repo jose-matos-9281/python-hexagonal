@@ -19,7 +19,7 @@ from example.contacto.domain.contacto import EstadoContacto
 from example.contacto.domain.entidad_contacto import IdEntidadContacto
 from example.contacto.domain.shared import IdEntidad, TipoContacto
 
-from ..base import BaseTest
+from ..base import BaseTest, count_inbox_rows, count_outbox_rows
 
 
 class TestMarcarContactado(BaseTest):
@@ -47,7 +47,9 @@ class TestMarcarContactado(BaseTest):
 
     @classmethod
     def teardown_class(cls):
-        cls.app.event_bus.shutdown()  # type: ignore
+        shutdown = getattr(cls.app.event_bus, "shutdown", None)
+        if callable(shutdown):
+            shutdown()
         # Cerrar el bus de eventos después de las pruebas
 
     def test_marcar_contactado(self):
@@ -68,6 +70,8 @@ class TestMarcarContactado(BaseTest):
             contacto=creado.id_contacto,
             usuario=creado.usuario,
         )
+        outbox_before = count_outbox_rows(self.app)
+        inbox_before = count_inbox_rows(self.app, processed=True)
         resp = self.api.publish_and_wait(
             event,
             wait=0.5,
@@ -81,3 +85,6 @@ class TestMarcarContactado(BaseTest):
         # THEN: el contacto se actualiza con estado CONTACTADO y usuario registrado
         contacto = self.api.get(creado.id_contacto.value)
         assert contacto.estado == EstadoContacto.CONTACTADO
+        assert count_outbox_rows(self.app) - outbox_before == 3
+        assert count_outbox_rows(self.app, published=False) == 0
+        assert count_inbox_rows(self.app, processed=True) - inbox_before == 1

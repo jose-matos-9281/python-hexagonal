@@ -91,8 +91,8 @@ class MessageMapper(Mapper[UUID]):
             getattr(cls, f"upcast_v{from_version}_v{from_version + 1}")(event_state)
             from_version += 1
         if issubclass(cls, AggregateSnapshot):
-            return cls.model_validate(event_state)  # type: ignore[return-value]
-        domain_event = object.__new__(cls)
+            return cast(DomainEventProtocol[UUID], cls.model_validate(event_state))
+        domain_event = cast(DomainEventProtocol[UUID], object.__new__(cls))
         domain_event.__dict__.update(event_state)
         return domain_event
 

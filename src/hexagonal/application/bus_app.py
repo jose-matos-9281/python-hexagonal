@@ -27,6 +27,8 @@ class ComposableBusApp(IBusApp[TManager]):
 
     @property
     def uow(self) -> IUnitOfWork[TManager]:
+        # Compatibility shim while application wiring migrates away from a
+        # singleton write UoW. Scoped execution should use handler providers.
         return self._bus_app.uow
 
     def __or__(self, other: IBusApp[TManager]) -> "ComposableBusApp[TManager]":
@@ -54,6 +56,8 @@ class BusAppGroup(ComposableBusApp[TManager]):
 
     @property
     def uow(self) -> IUnitOfWork[TManager]:
+        # Compatibility shim while provider-based registration replaces all
+        # remaining singleton-UoW call sites.
         return self._uow
 
     @property

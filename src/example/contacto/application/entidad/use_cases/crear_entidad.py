@@ -19,7 +19,7 @@ class CrearEntidad(EntidadCommand):
         tipo_entidad: TipoEntidad | str,
         *_: Any,
         **kwargs: Any,
-    ):
+    ) -> "CrearEntidad":
         if isinstance(tipo_entidad, str):
             tipo_entidad = TipoEntidad[tipo_entidad]
         entidad_value = EntidadValueStrategy[tipo_entidad].new(**kwargs)
@@ -40,7 +40,7 @@ class EntidadCreada(EntidadDomainEvent, topic_suffix="Creada"):
 
 
 class CrearEntidadHandler(EntidadCommandHandler[CrearEntidad]):
-    def execute(self, command: CrearEntidad):
+    def execute(self, command: CrearEntidad) -> list[EntidadCreada]:
         id_entidad = command.entidad.to_id()
         entidad = Entidad(id=id_entidad, value=command.entidad)
         self.repository.save(entidad)

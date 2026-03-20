@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Callable
 
 from hexagonal.application import Infrastructure
 from hexagonal.domain import CloudMessage
@@ -9,6 +9,7 @@ from hexagonal.ports.drivens import (
     IOutboxRepository,
     TManager,
 )
+from hexagonal.ports.drivens.scoped import IWriteScopeRunner, TWriteScope
 
 
 class MessageBus(IBaseMessageBus[TManager], Infrastructure):
@@ -16,9 +17,13 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
         self,
         inbox_repository: IInboxRepository[TManager],
         outbox_repository: IOutboxRepository[TManager],
-    ):
+    ) -> None:
         self._inbox_repository = inbox_repository
         self._outbox_repository = outbox_repository
+        self._write_scope_runner: IWriteScopeRunner[Any] | None = None
+        self._outbox_repository_getter: (
+            Callable[[Any], IOutboxRepository[TManager]] | None
+        ) = None
         super().__init__()
 
     @property
@@ -29,8 +34,34 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
     def outbox_repository(self) -> IOutboxRepository[TManager]:
         return self._outbox_repository
 
+    def configure_scope_runtime(
+        self,
+        *,
+        write_scope_runner: IWriteScopeRunner[TWriteScope] | None = None,
+        outbox_repository_getter: Callable[[TWriteScope], IOutboxRepository[TManager]]
+        | None = None,
+    ) -> None:
+        self._write_scope_runner = write_scope_runner
+        self._outbox_repository_getter = outbox_repository_getter
+
+    def save_to_outbox(self, *messages: CloudMessage[Any]) -> None:
+        self.verify()
+        if self._write_scope_runner is None or self._outbox_repository_getter is None:
+            self.outbox_repository.save(*messages)
+            return
+        outbox_repository_getter = self._outbox_repository_getter
+
+        scope = self._write_scope_runner.current_write_scope
+        if scope is not None:
+            outbox_repository_getter(scope).save(*messages)
+            return
+
+        self._write_scope_runner.run_in_write_scope(
+            lambda write_scope: outbox_repository_getter(write_scope).save(*messages)
+        )
+
     # publish
-    def publish_from_outbox(self, limit: int | None = None):
+    def publish_from_outbox(self, limit: int | None = None) -> None:
         self.verify()
         messages = self.outbox_repository.fetch_pending(limit=limit)
         self._publish_messages(*messages)

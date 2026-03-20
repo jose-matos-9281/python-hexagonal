@@ -20,7 +20,7 @@ class BorrarEntidad(EntidadCommand):
         id_entidad: IdEntidad | EntidadValue | UUID,
         *_: Any,
         **__: Any,
-    ):
+    ) -> "BorrarEntidad":
         _id = id_entidad.to_id() if isinstance(id_entidad, EntidadValue) else id_entidad
         id_entidad = IdEntidad.from_value(_id)
         return cls(id_entidad=id_entidad)

@@ -13,7 +13,7 @@ class Sqlalchemy(Entrypoint[IBaseApplication[Any]]):
     name = "sqlalchemy"
 
     @classmethod
-    def get(cls, env: Mapping[str, str] | None = None):
+    def get(cls, env: Mapping[str, str] | None = None) -> IBaseApplication[Any]:
         from hexagonal.entrypoints.sqlalchemy import SQLAlchemyAppEntrypoint
 
         from .db.sqlalchemy import (
@@ -32,3 +32,6 @@ class exampleEntrypoint(EntrypointGroup[IBaseApplication[Any]]):
     env_key = "ENV_REPOSITORY"
     entrypoints = [Sqlalchemy]
     env = {"ENV_REPOSITORY": "sqlalchemy"}
+
+
+__all__ = ["Sqlalchemy", "exampleEntrypoint"]

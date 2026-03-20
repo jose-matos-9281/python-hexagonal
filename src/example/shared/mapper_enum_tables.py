@@ -1,10 +1,11 @@
 from enum import Enum
 from typing import Generic, Mapping, Type, TypeVar
 
-from hexagonal.integrations.sqlalchemy import SQLAlchemyConnectionContextManager
-from hexagonal.application import Infrastructure
 from sqlalchemy import insert, select
 from sqlalchemy.orm import DeclarativeBase
+
+from hexagonal.application import Infrastructure
+from hexagonal.integrations.sqlalchemy import SQLAlchemyConnectionContextManager
 
 T = TypeVar("T", bound=DeclarativeBase)
 E = TypeVar("E", bound=Enum)
@@ -40,7 +41,7 @@ class MapperEnumTables(Generic[T, E], Infrastructure):
     def _sync(self) -> None:
         """Sincroniza de forma optimista el enum con los registros de la tabla."""
         # Usamos el manager para obtener una conexión y ejecutar los insert necesarios
-        with self.manager.cursor(commit=True) as conn:  # type: ignore
+        with self.manager.cursor(commit=True) as conn:
             # Consultar todos los registros existentes
             stmt = select(self.table_model)
             results = conn.execute(stmt).all()

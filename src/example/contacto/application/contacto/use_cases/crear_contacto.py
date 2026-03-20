@@ -29,7 +29,7 @@ class CrearContacto(ContactoCommand):
         usuario: IdUsuario | UUID | None = None,
         *_: Any,
         **__: Any,
-    ):
+    ) -> "CrearContacto":
         if isinstance(tipo_contacto, str):
             tipo_contacto = TipoContacto(tipo_contacto)
         contacto_value = ContactoValueStrategy[tipo_contacto].new(contacto)

@@ -1,5 +1,7 @@
 # pyright: reportMissingParameterType=none, reportGeneralTypeIssues=none
 
+from typing import Mapping
+
 from example.app.adapters.drivens.repository.sqlalchemy import (
     exampleSQLAlchemyInfrastructure,
 )
@@ -8,7 +10,10 @@ from example.app.application import exampleApp
 from example.app.ports.drivers import IexampleApp
 from hexagonal.entrypoints import Entrypoint
 from hexagonal.entrypoints.sqlalchemy import SQLAlchemyInfrastructureEntrypoint
-from hexagonal.integrations.sqlalchemy import SQLAlchemyConnectionContextManager
+from hexagonal.integrations.sqlalchemy import (
+    SQLAlchemyConnectionContextManager,
+    SQLAlchemyDatastore,
+)
 
 
 class SQLAlchemyexampleEntrypoint(
@@ -19,14 +24,24 @@ class SQLAlchemyexampleEntrypoint(
     }
 
     @classmethod
-    def get(cls, env=None):
+    def get(
+        cls, env: Mapping[str, str] | None = None
+    ) -> IexampleApp[SQLAlchemyConnectionContextManager]:
         env = cls.construct_env(env)
         sqlalchemy_infra = SQLAlchemyInfrastructureEntrypoint.get(env)
+        datastore: SQLAlchemyDatastore = sqlalchemy_infra.datastore
         infrastructure = exampleSQLAlchemyInfrastructure(
             sqlalchemy_infra.mapper,
-            sqlalchemy_infra.connection_manager,
+            datastore,
         )
         infrastructure.initialize(env)
         app = exampleApp(infrastructure)
         application = exampleAppProxyAdapter(app)
         return application
+
+
+__all__ = [
+    "SQLAlchemyConnectionContextManager",
+    "SQLAlchemyDatastore",
+    "SQLAlchemyexampleEntrypoint",
+]

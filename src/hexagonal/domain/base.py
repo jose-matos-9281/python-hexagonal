@@ -13,7 +13,9 @@ from uuid6 import uuid7
 class HasTopic:
     TOPIC: ClassVar[str] = ""
 
-    def __init_subclass__(cls, *, topic_suffix: Optional[str] = None, **kwargs: Any):
+    def __init_subclass__(
+        cls, *, topic_suffix: Optional[str] = None, **kwargs: Any
+    ) -> None:
         # Extraemos nuestro argumento para no pasárselo a Pydantic
         super().__init_subclass__(**kwargs)  # aquí Pydantic recibe sólo lo suyo
         new_topic = topic_suffix or cls.__name__
@@ -29,7 +31,7 @@ class HasTopic:
             set_topic = actual_topic
         else:
             set_topic = f"{base_topic}{'.' if base_topic != '' else ''}{new_topic}"
-        cls.TOPIC = set_topic  # type: ignore
+        cls.TOPIC = set_topic  # pyright: ignore[reportConstantRedefinition]
 
 
 class Inmutable(BaseModel):
@@ -150,7 +152,7 @@ class QueryResults(Inmutable, Generic[TView], FactoryMethod):
     next_cursor: Optional[str] = None
     prev_cursor: Optional[str] = None
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.items)
 
     @classmethod
@@ -160,7 +162,7 @@ class QueryResults(Inmutable, Generic[TView], FactoryMethod):
         limit: int,
         next_cursor: Optional[str] = None,
         prev_cursor: Optional[str] = None,
-    ):
+    ) -> Self:
         return cls(
             items=items, limit=limit, next_cursor=next_cursor, prev_cursor=prev_cursor
         )
@@ -170,7 +172,7 @@ class QueryResult(Inmutable, Generic[TView], FactoryMethod):
     item: TView
 
     @classmethod
-    def new(cls, item: TView):
+    def new(cls, item: TView) -> Self:
         return cls(item=item)
 
 

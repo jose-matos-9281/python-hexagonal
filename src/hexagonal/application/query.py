@@ -30,21 +30,23 @@ class SearchAggregateRepository(
         self,
         repo: IAggregateRepository[TManager, TAggregate, TIdEntity]
         | IEntityRepository[TManager, TEntity, TIdEntity],
-    ):
+    ) -> None:
         self._repo = repo
 
     def search(
         self, query: GetById[TAggregate | TEntity, TIdEntity]
     ) -> List[AggregateView[TAggregate | TEntity]]:
         aggregate = self._repo.get(query.id)
-        return [AggregateView[type(aggregate)].new(aggregate)]
+        return [
+            AggregateView[type(aggregate)].new(aggregate)  # type: ignore
+        ]  # no cambiar los test se rompen
 
     ## decorate methods from IAggregateRepository to pass through initialization ##
     def initialize(self, env: Mapping[str, str]) -> None:
         self._repo.initialize(env)
 
     @property
-    def initialized(self):
+    def initialized(self) -> bool:
         return self._repo.initialized
 
     @property
@@ -70,16 +72,30 @@ class GetByIdHandler(
         self,
         agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]
         | IEntityRepository[TManager, TEntity, TIdEntity],
-    ):
+    ) -> None:
         search = SearchAggregateRepository(agg_repo)
         super().__init__(search)
 
 
 class GetAggregateByIdHandler(GetByIdHandler[TManager, TIdEntity, TAggregate, Any]):
-    def __init__(self, agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]):
+    def __init__(
+        self, agg_repo: IAggregateRepository[TManager, TAggregate, TIdEntity]
+    ) -> None:
         super().__init__(agg_repo)
 
 
 class GetEntityByIdHandler(GetByIdHandler[TManager, TIdEntity, Any, TEntity]):
-    def __init__(self, entity_repo: IEntityRepository[TManager, TEntity, TIdEntity]):
+    def __init__(
+        self, entity_repo: IEntityRepository[TManager, TEntity, TIdEntity]
+    ) -> None:
         super().__init__(entity_repo)
+
+
+__all__ = [
+    "AggregateView",
+    "GetById",
+    "GetAggregateByIdHandler",
+    "GetByIdHandler",
+    "GetEntityByIdHandler",
+    "SearchAggregateRepository",
+]

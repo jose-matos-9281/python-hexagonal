@@ -2,12 +2,13 @@ from typing import Any, List, Optional, Type
 from uuid import UUID
 
 from example.contacto.domain.contacto import (
+    Contacto,
     EstadoContacto,
     Exampletate,
     GetContactoById,
 )
 from example.contacto.domain.shared import TipoContacto
-from hexagonal.application import BaseAPI, TBaseApp
+from hexagonal.application import ApiCommandResponse, BaseAPI, TBaseApp
 from hexagonal.domain import AggregateSnapshot, TEvento
 
 from .use_cases import (
@@ -46,7 +47,7 @@ class ContactoAPI(BaseAPI[TBaseApp]):
         events: Optional[List[Type[TEvento]]] = None,
         async_dispatch: bool = False,
         **kwargs: Any,
-    ):
+    ) -> ApiCommandResponse[CrearContacto]:
         command = CrearContacto.new(tipo_contacto, contacto, usuario)
         return self._dispatch_command(
             command,
@@ -56,7 +57,7 @@ class ContactoAPI(BaseAPI[TBaseApp]):
             **kwargs,
         )
 
-    def get(self, id_contacto: UUID):
+    def get(self, id_contacto: UUID) -> Contacto:
         return self._get_aggregate(id_contacto, GetContactoById)
 
     def validar(
@@ -68,7 +69,7 @@ class ContactoAPI(BaseAPI[TBaseApp]):
         events: Optional[List[Type[TEvento]]] = None,
         async_dispatch: bool = False,
         **kwargs: Any,
-    ):
+    ) -> ApiCommandResponse[ValidarContacto]:
         command = ValidarContacto.new(id_contacto, validacion, usuario)
         return self._dispatch_command(
             command,

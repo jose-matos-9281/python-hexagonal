@@ -30,7 +30,7 @@ class ValidarContacto(ContactoCommand, topic_suffix="Validar"):
         usuario: IdUsuario | UUID,
         *_: Any,
         **__: Any,
-    ):
+    ) -> "ValidarContacto":
         if isinstance(estado, str):
             estado = EstadoContacto[estado]
         id_contacto = IdContacto.from_value(id_contacto)
@@ -44,9 +44,9 @@ class ContactoContactado(ContactoDomainEvent, topic_suffix="Contactado"):
 
     @classmethod
     def new(cls, state: Exampletate) -> "ContactoContactado":
-        assert state.usuario_validacion is not None, (
-            "El usuario de validación no puede ser None"
-        )
+        assert (
+            state.usuario_validacion is not None
+        ), "El usuario de validación no puede ser None"
         return cls(
             id_contacto=state.id,
             estado=state.estado,
@@ -60,9 +60,9 @@ class ContactoNoContactado(ContactoDomainEvent, topic_suffix="NoContactado"):
 
     @classmethod
     def new(cls, state: Exampletate) -> "ContactoNoContactado":
-        assert state.usuario_validacion is not None, (
-            "El usuario de validación no puede ser None"
-        )
+        assert (
+            state.usuario_validacion is not None
+        ), "El usuario de validación no puede ser None"
         return cls(
             id_contacto=state.id,
             estado=state.estado,
@@ -76,9 +76,9 @@ class ContactoNoContactable(ContactoDomainEvent, topic_suffix="NoContactable"):
 
     @classmethod
     def new(cls, state: Exampletate) -> "ContactoNoContactable":
-        assert state.usuario_validacion is not None, (
-            "El usuario de validación no puede ser None"
-        )
+        assert (
+            state.usuario_validacion is not None
+        ), "El usuario de validación no puede ser None"
         return cls(
             id_contacto=state.id,
             estado=state.estado,

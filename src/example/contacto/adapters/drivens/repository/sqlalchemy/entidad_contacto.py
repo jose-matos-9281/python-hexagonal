@@ -18,11 +18,11 @@ from example.database.entidad_contacto import (
     ValidacionContactoEntidad as ValidacionContactoEntidadModel,
 )
 from example.shared.mapper_enum_tables import MapperEnumTables
+from hexagonal.domain import AggregateSnapshot, SnapshotState
 from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyConnectionContextManager,
     SQLAlchemyRepositoryAdapter,
 )
-from hexagonal.domain import AggregateSnapshot, SnapshotState
 
 
 class SQLAlchemyEntidadContactoRepositoryAdapter(
@@ -45,7 +45,7 @@ class SQLAlchemyEntidadContactoRepositoryAdapter(
         snap: AggregateSnapshot[SnapshotState[IdEntidadContacto]],
     ) -> None:
         super()._insert_snapshot(conn, snap)
-        state = cast(EntidadExampletate, snap.state)  # type: ignore
+        state = cast(EntidadExampletate, snap.state)
         stmt = insert(EntidadContactoModel).values(
             id_entidad=state.entidad.value,
             id_contacto=state.contacto.value,
@@ -67,7 +67,7 @@ class SQLAlchemyEntidadContactoRepositoryAdapter(
         snap: AggregateSnapshot[SnapshotState[IdEntidadContacto]],
     ) -> None:
         super()._update_snapshot(conn, snap)
-        state = cast(EntidadExampletate, snap.state)  # type: ignore
+        state = cast(EntidadExampletate, snap.state)
         stmt = (
             update(EntidadContactoModel)
             .where(

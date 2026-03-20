@@ -38,22 +38,19 @@ class BaseRepositoryAdapter(IBaseRepository[TManager], Infrastructure):
         name = self.NAME or self.__class__.__name__.upper()
         env2.update(env)
         self.env = Environment(name, env2)
-        self._attached_to_uow = False
-        self._manager_at_uow: TManager | None = None
+        self._scope_connection_manager: TManager | None = None
         super().initialize(self.env)
 
     def attach_to_unit_of_work(self, uow: IUnitOfWork[TManager]) -> None:
-        self._attached_to_uow = True
-        self._manager_at_uow = uow.connection_manager
+        self._scope_connection_manager = uow.connection_manager
 
     def detach_from_unit_of_work(self) -> None:
-        self._attached_to_uow = False
-        self._manager_at_uow = None
+        self._scope_connection_manager = None
 
     @property
     def connection_manager(self) -> TManager:
-        if self._attached_to_uow and self._manager_at_uow is not None:
-            return self._manager_at_uow
+        if self._scope_connection_manager is not None:
+            return self._scope_connection_manager
         return self._connection_manager
 
 

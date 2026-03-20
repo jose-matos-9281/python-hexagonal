@@ -4,7 +4,6 @@ from eventsourcing.utils import get_topic
 
 from hexagonal.domain import (
     CloudMessage,
-    Command,
     HandlerAlreadyRegistered,
     HandlerNotRegistered,
     TCommand,
@@ -36,14 +35,14 @@ class BaseCommandBus(ICommandBus[TManager], MessageBus[TManager]):
 
     def register_handler(
         self, command_type: Type[TCommand], handler: IMessageHandler[TCommand]
-    ):
+    ) -> None:
         self.verify()
         name = self._get_name(command_type)
         if name in self._handlers:
             raise HandlerAlreadyRegistered(f"Command: {name}")
         self._handlers[name] = handler
 
-    def unregister_handler(self, command_type: Type[TCommand]):
+    def unregister_handler(self, command_type: Type[TCommand]) -> None:
         self.verify()
         name = self._get_name(command_type)
         if name in self._handlers:
@@ -52,18 +51,16 @@ class BaseCommandBus(ICommandBus[TManager], MessageBus[TManager]):
             raise HandlerNotRegistered(f"Command: {name}")
 
     def dispatch(
-        self, command: TCommand | CloudMessage[TCommand], *, to_outbox: bool = False
+        self,
+        command: CloudMessage[TCommand],
+        *,
+        to_outbox: bool = False,
     ) -> None:
         self.verify()
-        cmd = (
-            command
-            if not isinstance(command, Command)
-            else CloudMessage[command.__class__].new(command)  # type: ignore
-        )
         if to_outbox:
-            self.outbox_repository.save(cmd)
+            self.save_to_outbox(command)
         else:
-            self.process_command(cmd)
+            self.process_command(command)
 
     def process_command(self, command: CloudMessage[TCommand]) -> None:
         self._process_messages(command)

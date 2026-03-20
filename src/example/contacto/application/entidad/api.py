@@ -3,7 +3,7 @@ from uuid import UUID
 
 from example.contacto.domain.entidad import Entidad, GetEntidadById
 from example.contacto.domain.shared import IdEntidad, TipoEntidad
-from hexagonal.application.api import BaseAPI, TBaseApp
+from hexagonal.application import ApiCommandResponse, BaseAPI, TBaseApp
 from hexagonal.domain import TEvento
 
 from .use_cases import (
@@ -34,7 +34,7 @@ class EntidadAPI(BaseAPI[TBaseApp]):
         events: Optional[List[Type[TEvento]]] = None,
         async_dispatch: bool = False,
         **kwargs: Any,
-    ):
+    ) -> ApiCommandResponse[CrearEntidad]:
         command = CrearEntidad.new(tipo_entidad, **datos_entidad)
         return self._dispatch_command(
             command,
@@ -61,7 +61,7 @@ class EntidadAPI(BaseAPI[TBaseApp]):
         events: Optional[List[Type[TEvento]]] = None,
         async_dispatch: bool = False,
         **kwargs: Any,
-    ):
+    ) -> ApiCommandResponse[BorrarEntidad]:
         command = BorrarEntidad.new(id_entidad)
         return self._dispatch_command(
             command,

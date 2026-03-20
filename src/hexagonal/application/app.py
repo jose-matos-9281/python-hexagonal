@@ -1,6 +1,7 @@
-from typing import Dict, Generic, Type
+from typing import Generic, Type
 
-from hexagonal.domain import CloudMessage, TCommand, TEvent
+from hexagonal.domain import CloudMessage, CommandOutcome, TCommand, TEvent
+from hexagonal.domain.base import TEvento
 from hexagonal.ports.drivens import (
     IBusInfrastructure,
     ICommandBus,
@@ -14,10 +15,10 @@ from hexagonal.ports.drivers import IBaseApplication, IBusApp
 class GetEvent(Generic[TEvent]):
     event: TEvent | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.event = None
 
-    def __call__(self, event: TEvent):
+    def __call__(self, event: TEvent) -> None:
         self.event = event
 
 
@@ -26,14 +27,10 @@ class Application(IBaseApplication[TManager]):
         self,
         bus_app: IBusApp[TManager],
         bus_infrastructure: IBusInfrastructure[TManager],
-    ):
+    ) -> None:
         bus_infrastructure.verify()
         self._bus_infrastructure = bus_infrastructure
         self._bus_app = bus_app
-        self._bus_app.uow.attach_repo(self.event_bus.inbox_repository)
-        self._bus_app.uow.attach_repo(self.event_bus.outbox_repository)
-        self._bus_app.uow.attach_repo(self.command_bus.inbox_repository)
-        self._bus_app.uow.attach_repo(self.command_bus.outbox_repository)
         self.bootstrap(self._bus_app)
 
     @property
@@ -66,11 +63,17 @@ class Application(IBaseApplication[TManager]):
     def dispatch_and_wait_events(
         self,
         command: CloudMessage[TCommand],
-        *event_types: Type[TEvent],
-    ) -> Dict[Type[TEvent], TEvent | None]:
-        handlers = [(event_type, GetEvent[event_type]()) for event_type in event_types]  # type: ignore
-        # type: ignore
-        for event_type, handler in handlers:
+        *event_types: Type[TEvento],
+    ) -> CommandOutcome[TCommand]:
+        handlers: dict[Type[TEvento], GetEvent[TEvento]] = {}
+        for event_type in event_types:
+            handler = GetEvent[TEvento]()
+            handlers[event_type] = handler
             self.event_bus.wait_for_publish(event_type, handler)
         self.command_bus.dispatch(command)
-        return {event_type: handler.event for event_type, handler in handlers}
+        return CommandOutcome(
+            command=command,
+            events={
+                event_type: handler.event for event_type, handler in handlers.items()
+            },
+        )

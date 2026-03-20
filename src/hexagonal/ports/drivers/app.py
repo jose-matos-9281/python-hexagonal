@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic
 
-from hexagonal.domain import CloudMessage, TCommand, TEvent
+from hexagonal.domain import CloudMessage, CommandOutcome, TCommand, TEvento
 from hexagonal.ports.drivens import (
     IBusInfrastructure,
     ICommandBus,
@@ -54,5 +54,5 @@ class IBaseApplication(ABC, Generic[TManager]):
     def dispatch_and_wait_events(
         self,
         command: CloudMessage[TCommand],
-        *event_types: type[TEvent],
-    ) -> dict[type[TEvent], TEvent | None]: ...
+        *event_types: type[TEvento],
+    ) -> CommandOutcome[TCommand]: ...

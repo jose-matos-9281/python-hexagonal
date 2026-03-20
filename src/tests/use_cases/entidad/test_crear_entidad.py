@@ -101,7 +101,10 @@ class TestCrearEntidad(BaseTest):
 
         ## WHEN: Intentar crear la misma entidad nuevamente
         self.logger.info(
-            "Intentando crear entidad duplicada con cd_asegurado %s y cd_dependiente %s",
+            (
+                "Intentando crear entidad duplicada con "
+                "cd_asegurado %s y cd_dependiente %s"
+            ),
             cd_asegurado,
             cd_dependiente,
         )

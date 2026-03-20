@@ -36,8 +36,9 @@ Read these files next:
 - `src/example/contacto/ports/drivens.py`
 - `src/example/contacto/ports/drivers.py`
 
-`drivens.py` defines the infrastructure the app needs: repositories and unit of
-work. `drivers.py` defines the application-facing contract.
+`drivens.py` defines the infrastructure the app needs: repositories, scope
+creation, and unit-of-work boundaries. `drivers.py` defines the
+application-facing contract.
 
 That separation matters because the application layer depends on interfaces, not
 database code.
@@ -144,6 +145,7 @@ The test bootstrap proves the intended flow:
 - run migrations
 - create the app through `exampleEntrypoint.get(env=...)`
 - wrap it with `exampleAPI`
+- let buses resolve handlers and repositories inside fresh scopes
 - call `register_topics()` before dispatching commands or publishing events
 
 That is the evidence-backed baseline for testing your own app.
@@ -153,9 +155,10 @@ That is the evidence-backed baseline for testing your own app.
 1. `README.md`
 2. `docs/explanation/architecture-from-example.md`
 3. `docs/how-to/bootstrap-sqlalchemy-app.md`
-4. `docs/how-to/test-use-cases.md`
-5. `docs/reference/supported-surface.md`
-6. `docs/reference/evidence-map.yaml`
+4. `docs/how-to/migrate-to-0.3.0-scoped-execution.md`
+5. `docs/how-to/test-use-cases.md`
+6. `docs/reference/supported-surface.md`
+7. `docs/reference/evidence-map.yaml`
 
 If you want repo-specific guidance after that, run the companion skill in
 `skills/python-hexagonal-usage/SKILL.md`.

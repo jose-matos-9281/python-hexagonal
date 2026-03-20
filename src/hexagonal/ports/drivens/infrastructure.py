@@ -12,7 +12,7 @@ class IBaseInfrastructure(ABC):
     @abstractmethod
     def initialize(self, env: Mapping[str, str]) -> None: ...
 
-    def verify(self):
+    def verify(self) -> None:
         if not self.initialized:
             raise InfrastructureNotInitialized(
                 f"{self.__class__.__name__} is not initialized"

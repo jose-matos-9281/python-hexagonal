@@ -7,7 +7,7 @@ logger = getLogger(__name__)
 
 
 class ComposableInfrastructure(IBaseInfrastructure):
-    def __init__(self, infrastructure: IBaseInfrastructure):
+    def __init__(self, infrastructure: IBaseInfrastructure) -> None:
         self.infrastructure = infrastructure
 
     def initialize(self, env: Mapping[str, str]) -> None:
@@ -35,7 +35,7 @@ class ComposableInfrastructure(IBaseInfrastructure):
 
 
 class InfrastructureGroup(ComposableInfrastructure):
-    def __init__(self, *infrastructures: IBaseInfrastructure):
+    def __init__(self, *infrastructures: IBaseInfrastructure) -> None:
         self.infrastructures = list(infrastructures)
 
     def initialize(self, env: Mapping[str, str]) -> None:
@@ -52,7 +52,7 @@ class InfrastructureGroup(ComposableInfrastructure):
 
 
 class Infrastructure(ComposableInfrastructure):
-    def __init__(self):
+    def __init__(self) -> None:
         self._initialized = False
 
     def initialize(self, env: Mapping[str, str]) -> None:

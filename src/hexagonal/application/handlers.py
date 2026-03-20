@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Generic, Iterable
+from typing import Any, Callable, Generic, Iterable, Protocol, TypeVar
 
 from hexagonal.domain import (
     CloudMessage,
@@ -16,14 +16,75 @@ from hexagonal.ports.drivens import (
     IMessageHandler,
     IQueryBus,
     IQueryHandler,
+    IReadScopeRunner,
     ISearchRepository,
     IUnitOfWork,
     IUseCase,
+    IWriteScopeRunner,
     TManager,
     TRepository,
 )
 
 logger = logging.getLogger(__name__)
+
+TWriteScope = TypeVar("TWriteScope")
+TReadScope = TypeVar("TReadScope")
+TWriteScope_contra = TypeVar("TWriteScope_contra", contravariant=True)
+
+
+class IScopedMessageHandlerProvider(Protocol[TMessagePayloadType, TWriteScope_contra]):
+    def create(
+        self, scope: TWriteScope_contra
+    ) -> IMessageHandler[TMessagePayloadType]: ...
+
+
+class ScopedMessageHandlerProvider(
+    IMessageHandler[TMessagePayloadType],
+    Generic[TMessagePayloadType, TWriteScope],
+):
+    def __init__(
+        self,
+        write_scope_runner: IWriteScopeRunner[TWriteScope],
+        factory: Callable[[TWriteScope], IMessageHandler[TMessagePayloadType]],
+    ) -> None:
+        self._write_scope_runner = write_scope_runner
+        self._factory = factory
+        self.handler_key = f"{self.__class__.__name__}:{id(self)}"
+
+    def create(self, scope: TWriteScope) -> IMessageHandler[TMessagePayloadType]:
+        return self._factory(scope)
+
+    def handle_message(self, message: CloudMessage[TMessagePayloadType]) -> None:
+        self._write_scope_runner.run_in_write_scope(
+            lambda scope: self.create(scope).handle_message(message)
+        )
+
+    def get_use_case(self, message: TMessagePayloadType) -> IUseCase:
+        raise NotImplementedError(
+            "Scoped providers materialize handlers inside a scope"
+        )
+
+
+class ScopedQueryHandlerProvider(
+    IQueryHandler[TManager, TQuery, TView],
+    Generic[TManager, TQuery, TView, TReadScope],
+):
+    def __init__(
+        self,
+        read_scope_runner: IReadScopeRunner[TReadScope],
+        factory: Callable[[TReadScope], IQueryHandler[TManager, TQuery, TView]],
+    ) -> None:
+        self._read_scope_runner = read_scope_runner
+        self._factory = factory
+
+    @property
+    def repository(self) -> ISearchRepository[TManager, TQuery, TView]:
+        raise RuntimeError("Scoped query providers do not expose a stable repository")
+
+    def get(self, query: TQuery) -> QueryResults[TView]:
+        return self._read_scope_runner.run_in_read_scope(
+            lambda scope: self._factory(scope).get(query)
+        )
 
 
 class MessageHandler(
@@ -44,9 +105,14 @@ class MessageHandler(
         self.uow = uow
         self._repository = repository
         self._query_bus = query_bus
-        if repository is not None:
+        if (
+            repository is not None
+            and repository.connection_manager is not self.uow.connection_manager
+        ):
             self.uow.attach_repo(repository)
         for repository in repositories:
+            if repository.connection_manager is self.uow.connection_manager:
+                continue
             self.uow.attach_repo(repository)
 
     @property
@@ -68,8 +134,8 @@ class MessageHandler(
             if not events:
                 return
             messages = [message.derive(event, **message.metadata) for event in events]
-            self.event_bus.outbox_repository.save(*messages)
-        return self.event_bus.publish_from_outbox()
+            self.event_bus.save_to_outbox(*messages)
+        self.event_bus.publish_from_outbox()
 
 
 class EventHandlerBase(MessageHandler[TEvent, TRepository]):
@@ -82,7 +148,7 @@ class EventHandlerBase(MessageHandler[TEvent, TRepository]):
             self.event_handler = event_handler
             self.event = event
 
-        def execute(self):
+        def execute(self) -> Iterable[TEvento]:
             evento = self.event_handler.handle(self.event)
             return evento
 
@@ -106,7 +172,7 @@ class CommandHandlerBase(MessageHandler[TCommand, TRepository]):
             self.command_handler = command_handler
             self.command = command
 
-        def execute(self):
+        def execute(self) -> Iterable[TEvento]:
             evento = self.command_handler.execute(self.command)
             return evento
 
@@ -133,4 +199,5 @@ class QueryHandler(IQueryHandler[TManager, TQuery, TView]):
 
     def get(self, query: TQuery) -> QueryResults[TView]:
         results = self.repository.search(query)
-        return QueryResults[TView].new(items=results, limit=len(results))
+        items = list(results)
+        return QueryResults[TView].new(items=items, limit=len(items))

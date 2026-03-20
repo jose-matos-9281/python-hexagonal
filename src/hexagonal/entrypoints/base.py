@@ -23,7 +23,7 @@ class Entrypoint(ABC, Generic[T]):
     name: ClassVar[str]
 
     @classmethod
-    def setName(cls, name: str | None = None):
+    def setName(cls, name: str | None = None) -> None:
         if hasattr(cls, "name"):
             return
         cls.name = name or cls.__name__
@@ -68,7 +68,7 @@ class EntrypointGroup(Entrypoint[T]):
         cls.entrypoints = entrypoints
 
     @classmethod
-    def addEntrypoint(cls, entrypoint: Type[Entrypoint[T]]):
+    def addEntrypoint(cls, entrypoint: Type[Entrypoint[T]]) -> None:
         cls.entrypoints.append(entrypoint)
 
     @classmethod

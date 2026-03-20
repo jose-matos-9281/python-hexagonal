@@ -21,8 +21,8 @@ from hexagonal.integrations.sqlalchemy import (
     SQLAlchemyPairInboxOutbox,
 )
 
-# Cache for infrastructure instances to ensure same database URL reuses the same
-# datastore and connection manager. Key is the database URL.
+# Cache for infrastructure instances to ensure the same database URL reuses the
+# same immutable datastore and mapper bundle. Key is the database URL.
 _infrastructure_cache: dict[str, SQLAlchemyInfrastructure] = {}
 
 
@@ -31,6 +31,11 @@ def clear_infrastructure_cache() -> None:
 
     Useful for testing when you need to reset the cached infrastructure.
     """
+    for infrastructure in _infrastructure_cache.values():
+        try:
+            infrastructure.datastore.dispose()
+        except Exception:
+            pass
     _infrastructure_cache.clear()
 
 

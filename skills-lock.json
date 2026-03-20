@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "skills": {
+    "black_ruff_mypy": {
+      "source": "davidcastagnetoa/skills",
+      "sourceType": "github",
+      "computedHash": "4ce951471a8cceb098588a3263caa1ca5204684a0e7db1c96bf9ebb614e3b77b"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "645b891da1edbae76ab79c7b088d4e73397464f8396edaf773c0e01971ce75d6"
+    },
+    "gh-cli": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "cbe644b0c6760ae2a1eaafa39133920d889331327065d92a131675a665273e56"
+    },
+    "modern-python": {
+      "source": "trailofbits/skills",
+      "sourceType": "github",
+      "computedHash": "cf3f5314887a7726b3a18be574dcb4c753e74ce5105d5496d1f18c802c9e4e77"
+    },
+    "prd": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "1f3e1f005fc40fda85d250ae906c8ee4f7e8e833e23adfeca6542c19609fd7cd"
+    },
+    "python-typing-ops": {
+      "source": "0xdarkmatter/claude-mods",
+      "sourceType": "github",
+      "computedHash": "729f8e9a18fef21b38c525cd3cc8232091a113b5144cb51cbf58ac8b93f9f045"
+    },
+    "ruff-linting": {
+      "source": "laurigates/claude-plugins",
+      "sourceType": "github",
+      "computedHash": "d1fb6d34d48a645bc5715f91dd5ba176aad87355147e965ad49cfd4a8744d9a7"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "57f470f512f45bdac598e302bc72fd62bf2b649fc7fad032efe97720149cde4d"
+    }
+  }
+}

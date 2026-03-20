@@ -29,6 +29,19 @@ and the reusable repository/unit-of-work helpers are now promoted behind an
 explicit public namespace. Treat both as SQLAlchemy-only integration surfaces,
 not as the whole architecture.
 
+## Scoped execution rule
+
+Starting in `0.3.0`, the supported execution model is:
+
+- share datastore, mapper, and provider/factory objects
+- create a fresh write scope per command/event dispatch
+- create a fresh read scope per query/read operation
+- treat long-lived `uow` or repository instances as compatibility shims, not as
+  the preferred integration pattern
+
+If your app wiring still captures repositories or a mutable `uow` at bootstrap
+time, you are fighting the supported model.
+
 ### Internal or evidence-only
 
 - `hexagonal.__init__`

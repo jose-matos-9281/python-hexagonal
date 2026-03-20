@@ -1,4 +1,4 @@
-from typing import Any, Generic, Type
+from typing import Any, Generic, Type, cast
 
 from .aggregate import TAggregateOrEntity, TIdEntity
 from .base import QueryOne, ValueObject
@@ -13,5 +13,10 @@ class GetById(
     id: TIdEntity
 
     @classmethod
-    def new(cls, id: TIdEntity, agg_type: Type[TAggregateOrEntity], *_: Any, **__: Any):
-        return cls(id=id, view=AggregateView[agg_type])  # type: ignore
+    def new(
+        cls, id: TIdEntity, agg_type: Type[TAggregateOrEntity], *_: Any, **__: Any
+    ) -> "GetById[TAggregateOrEntity, TIdEntity]":
+        return cls(
+            id=id,
+            view=cast(type[AggregateView[TAggregateOrEntity]], AggregateView),
+        )

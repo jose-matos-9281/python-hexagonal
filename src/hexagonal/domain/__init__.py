@@ -46,6 +46,7 @@ from .exceptions import (
     InfrastructureNotInitialized,
 )
 from .queries import AggregateView, GetById
+from .responses import CommandOutcome, EventOutcome
 
 __all__ = [
     "ExternalId",
@@ -91,4 +92,6 @@ __all__ = [
     "TEntity",
     "QueryOne",
     "QueryBase",
+    "EventOutcome",
+    "CommandOutcome",
 ]
