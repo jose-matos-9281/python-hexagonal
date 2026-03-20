@@ -35,6 +35,11 @@
       "source": "laurigates/claude-plugins",
       "sourceType": "github",
       "computedHash": "d1fb6d34d48a645bc5715f91dd5ba176aad87355147e965ad49cfd4a8744d9a7"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "57f470f512f45bdac598e302bc72fd62bf2b649fc7fad032efe97720149cde4d"
     }
   }
 }
