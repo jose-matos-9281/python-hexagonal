@@ -1,6 +1,6 @@
 [project]
 name = "python-hexagonal"
-version = "0.3.0"
+version = "0.3.1"
 description = "Framework to build hexagonal architecture applications in Python."
 readme = "README.md"
 authors = [
