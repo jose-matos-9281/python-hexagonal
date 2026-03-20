@@ -78,8 +78,84 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
     )
 
     runner = cast(Any, app.bus_app).infrastructure.write_scope_runner
+    main_scope = runner.run_in_write_scope(
+        lambda scope: (
+            threading.get_ident(),
+            id(scope.uow),
+            id(scope.uow.connection_manager),
+        )
+    )
+
+    created_scopes: list[tuple[int, int, int]] = []
+    original_create_write_scope = runner._create_write_scope
+
+    def record_write_scope():
+        scope = original_create_write_scope()
+        created_scopes.append(
+            (
+                threading.get_ident(),
+                id(scope.uow),
+                id(scope.uow.connection_manager),
+            )
+        )
+        return scope
+
+    runner._create_write_scope = record_write_scope
+    created_event = {}
+    contacto_api = api.contacto.contacto
     command_bus = cast(Any, app.command_bus)
     event_bus = cast(Any, app.event_bus)
+
+    command_bus.consume()
+    event_bus.consume()
+    event_bus.wait_for_publish(
+        contacto_api.Events.CREADO.value,
+        lambda event: created_event.setdefault("value", event),
+    )
+
+    try:
+        response = contacto_api.crear(
+            TipoContacto.EMAIL.value,
+            "queued-worker@example.com",
+            async_dispatch=True,
+        )
+
+        assert response.has_events is False
+
+        command_bus.publish_from_outbox()
+        command_bus.queue.join()
+        event_bus.queue.join()
+
+        created = created_event.get("value")
+        assert created is not None
+        assert (
+            contacto_api.get(created.id_contacto.value).contacto.value
+            == "queued-worker@example.com"
+        )
+
+        worker_scopes = [scope for scope in created_scopes if scope[0] != main_scope[0]]
+
+        assert worker_scopes
+        assert all(scope[1] != main_scope[1] for scope in worker_scopes)
+        assert all(scope[2] != main_scope[2] for scope in worker_scopes)
+    finally:
+        runner._create_write_scope = original_create_write_scope
+        command_bus.shutdown()
+        event_bus.shutdown()
+
+
+def test_queued_command_publish_from_outbox_uses_scoped_repository(tmp_path: Path):
+    _, app, api = bootstrap_example_stack(
+        tmp_path / "parallel-dispatch-command-publish-routing.db",
+        {
+            "ENV_BUS": "inmemory_queue",
+            "EVENT_BUS_WORKER_DAEMON": "false",
+        },
+    )
+
+    runner = cast(Any, app.bus_app).infrastructure.write_scope_runner
+    command_bus = cast(Any, app.command_bus)
+    contacto_api = api.contacto.contacto
     main_scope = runner.run_in_write_scope(
         lambda scope: (
             threading.get_ident(),
@@ -91,7 +167,9 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
     created_scopes: list[tuple[int, int, int]] = []
     scoped_publish_usage: list[tuple[int, str, int, int]] = []
     root_publish_usage: list[str] = []
+    published_ids: list[object] = []
     original_create_write_scope = runner._create_write_scope
+    original_publish_message = command_bus._publish_message
     root_outbox = command_bus.outbox_repository
     original_root_fetch_pending = root_outbox.fetch_pending
     original_root_mark_as_published = root_outbox.mark_as_published
@@ -143,64 +221,42 @@ def test_queued_command_worker_uses_an_isolated_write_scope_end_to_end(tmp_path:
         root_publish_usage.append("mark")
         return original_root_mark_as_published(*message_ids)
 
+    def publish_message_noop(message):
+        published_ids.append(message.message_id)
+
     runner._create_write_scope = record_write_scope
+    command_bus._publish_message = publish_message_noop
     root_outbox.fetch_pending = root_fetch_pending
     root_outbox.mark_as_published = root_mark_as_published
-    created_event = {}
-    contacto_api = api.contacto.contacto
-
-    app.command_bus.consume()
-    app.event_bus.consume()
-    app.event_bus.wait_for_publish(
-        contacto_api.Events.CREADO.value,
-        lambda event: created_event.setdefault("value", event),
-    )
 
     try:
         response = contacto_api.crear(
             TipoContacto.EMAIL.value,
-            "queued-worker@example.com",
+            "queued-publish-routing@example.com",
             async_dispatch=True,
         )
 
         assert response.has_events is False
 
         command_bus.publish_from_outbox()
-        command_bus.queue.join()
-        event_bus.queue.join()
 
-        created = created_event.get("value")
-        assert created is not None
-        assert (
-            contacto_api.get(created.id_contacto.value).contacto.value
-            == "queued-worker@example.com"
-        )
-
-        worker_scopes = [scope for scope in created_scopes if scope[0] != main_scope[0]]
         publish_scopes = [
-            scope for scope in created_scopes if scope[1] != main_scope[1]
-        ]
-        main_thread_publish_usage = [
-            entry for entry in scoped_publish_usage if entry[0] == main_scope[0]
+            scope for scope in created_scopes if scope[0] == main_scope[0]
         ]
 
-        assert worker_scopes
-        assert all(scope[1] != main_scope[1] for scope in worker_scopes)
-        assert all(scope[2] != main_scope[2] for scope in worker_scopes)
+        assert published_ids
         assert root_publish_usage == []
-        assert [operation for _, operation, _, _ in main_thread_publish_usage] == [
+        assert [operation for _, operation, _, _ in scoped_publish_usage] == [
             "fetch",
             "mark",
         ]
         assert publish_scopes
         assert all(scope[1] != main_scope[1] for scope in publish_scopes)
         assert (
-            len({repository_id for _, _, _, repository_id in main_thread_publish_usage})
-            == 1
+            len({repository_id for _, _, _, repository_id in scoped_publish_usage}) == 1
         )
     finally:
         runner._create_write_scope = original_create_write_scope
+        command_bus._publish_message = original_publish_message
         root_outbox.fetch_pending = original_root_fetch_pending
         root_outbox.mark_as_published = original_root_mark_as_published
-        command_bus.shutdown()
-        event_bus.shutdown()
