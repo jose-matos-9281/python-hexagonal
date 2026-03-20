@@ -30,12 +30,6 @@ TReadScope_co = TypeVar("TReadScope_co", covariant=True)
 TWriteScope_co = TypeVar("TWriteScope_co", covariant=True)
 
 
-@dataclass(frozen=True)
-class ExecutionScope(Generic[TManager]):
-    uow: "IUnitOfWork[TManager]"
-    repositories: Mapping[str, object]
-
-
 class IWriteScopeFactory(Protocol, Generic[TWriteScope_co]):
     def create_write_scope(self) -> TWriteScope_co: ...
 
@@ -70,6 +64,12 @@ class IBaseRepository(IBaseInfrastructure, Generic[TManager]):
     # Compatibility shim paired with attach_to_unit_of_work(); remove once Phase 5
     # eliminates legacy mutable attachment paths.
     def detach_from_unit_of_work(self) -> None: ...
+
+
+@dataclass(frozen=True)
+class ExecutionScope(Generic[TManager]):
+    uow: "IUnitOfWork[TManager]"
+    repositories: Mapping[str, IBaseRepository[TManager]]
 
 
 class IUnitOfWork(IBaseInfrastructure, ABC, Generic[TManager]):
