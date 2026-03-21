@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from eventsourcing.utils import strtobool
 from sqlalchemy import Connection, Engine, create_engine, text
-from sqlalchemy.pool import QueuePool, StaticPool
+from sqlalchemy.pool import QueuePool
 
 from hexagonal.ports.drivens.repository import IConnectionManager
 
@@ -52,26 +52,31 @@ class SQLAlchemyDatastore:
         """
         self._database_url = database_url
 
-        # SQLite uses StaticPool for single connection (avoids database lock issues)
-        # Other databases use QueuePool with configurable settings
+        # Use QueuePool across all backends.
+        # For SQLite this allows multiple pooled connections, which is required
+        # for concurrent test scenarios.
         is_sqlite = database_url.startswith("sqlite")
 
-        pool_class = StaticPool if is_sqlite else QueuePool
+        pool_class = QueuePool
         pool_kwargs: dict[Any, Any] = {}
 
         if is_sqlite:
-            # For SQLite with StaticPool, we need connect_args
-            pool_kwargs["connect_args"] = {"check_same_thread": False}
-        else:
-            pool_kwargs.update(
-                {
-                    "pool_size": pool_size,
-                    "pool_timeout": pool_timeout,
-                    "pool_recycle": pool_recycle,
-                    "pool_pre_ping": pool_pre_ping,
-                    "max_overflow": max_overflow,
-                }
-            )
+            # SQLite connections are thread-affine by default.
+            # Disable the thread check so pooled connections can be used by
+            # different worker threads in tests.
+            pool_kwargs["connect_args"] = {
+                "check_same_thread": False,
+                "timeout": pool_timeout,
+            }
+        pool_kwargs.update(
+            {
+                "pool_size": pool_size,
+                "pool_timeout": pool_timeout,
+                "pool_recycle": pool_recycle,
+                "pool_pre_ping": pool_pre_ping,
+                "max_overflow": max_overflow,
+            }
+        )
 
         self._engine: Engine = create_engine(
             database_url,
@@ -103,6 +108,7 @@ class SQLAlchemyDatastore:
             # Enable foreign key support for SQLite
             if self._database_url.startswith("sqlite"):
                 connection.execute(text("PRAGMA foreign_keys = ON"))
+                connection.execute(text("PRAGMA busy_timeout = 30000"))
             yield connection
 
     @contextmanager
@@ -152,6 +158,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
         self._datastore = datastore
         self._current_connection: Optional[Connection] = None
         self._connection_ctx: Optional[AbstractContextManager[Connection]] = None
+        self._uow_managed_connection = False
         self._initialized = datastore is not None
 
     @property
@@ -227,6 +234,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
         """
         self._connection_ctx = self.datastore.get_connection()
         self._current_connection = self._connection_ctx.__enter__()
+        self._uow_managed_connection = True
         return self._connection_ctx
 
     @property
@@ -240,6 +248,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
             If no connection exists or it's closed, a new one will be created.
         #"""
         if self._current_connection is None or self._current_connection.closed:
+            self.current_connection = None
             self._connection_ctx = self.datastore.get_connection()
             self._current_connection = self._connection_ctx.__enter__()
         if self._current_connection is None:
@@ -259,6 +268,7 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
             except Exception:
                 pass  # Ignore errors during cleanup
             self._connection_ctx = None
+        self._uow_managed_connection = False
         self._current_connection = connection
 
     @contextmanager
@@ -276,16 +286,19 @@ class SQLAlchemyConnectionContextManager(IConnectionManager):
         Yields:
             Current connection for executing statements
         """
-        try:
-            # Check if connection is usable
-            conn = self.current_connection
-            if conn.closed:
-                self._current_connection = None
+        if self._uow_managed_connection:
+            try:
                 conn = self.current_connection
+                if conn.closed:
+                    self.current_connection = None
+                    conn = self.current_connection
+                yield conn
+            except Exception:
+                self.current_connection = None
+                raise
+            return
+
+        with self.datastore.get_connection() as conn:
             yield conn
             if commit and conn.in_transaction():
                 conn.commit()
-        except Exception:
-            # Reset connection on error
-            self._current_connection = None
-            raise
