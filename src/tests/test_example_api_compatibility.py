@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from example import exampleEntrypoint
 from example.app.entrypoints.db.sqlalchemy import SQLAlchemyexampleEntrypoint
 from example.app.entrypoints.main import exampleEntrypoint as main_example_entrypoint
@@ -11,7 +13,7 @@ from tests.use_cases.base import (
 )
 
 
-def test_public_example_exports_keep_bootstrap_contract(tmp_path):
+def test_public_example_exports_keep_bootstrap_contract(tmp_path: Path):
     assert exampleEntrypoint is main_example_entrypoint
 
     _, app, api = bootstrap_example_stack(
@@ -36,7 +38,7 @@ def test_public_example_exports_keep_bootstrap_contract(tmp_path):
     assert count_outbox_rows(app, published=False) == 0
 
 
-def test_sqlalchemy_example_entrypoint_still_builds_a_bus_app(tmp_path):
+def test_sqlalchemy_example_entrypoint_still_builds_a_bus_app(tmp_path: Path):
     env = build_example_env(
         tmp_path / "example-db-entrypoint-compatibility.db",
         {"ENV_BUS": "inmemory"},
