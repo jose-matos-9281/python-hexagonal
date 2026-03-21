@@ -109,8 +109,8 @@ class SQLAlchemyDatastore:
             if self._database_url.startswith("sqlite"):
                 connection.execute(text("PRAGMA foreign_keys = ON"))
                 connection.execute(text("PRAGMA busy_timeout = 30000"))
-                connection.execute(text("PRAGMA journal_mode = WAL"))
-                connection.execute(text("PRAGMA synchronous = NORMAL"))
+                # connection.execute(text("PRAGMA journal_mode = WAL"))
+                # connection.execute(text("PRAGMA synchronous = NORMAL"))
             yield connection
 
     @contextmanager

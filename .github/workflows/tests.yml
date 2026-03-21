@@ -34,4 +34,7 @@ jobs:
         run: uv sync --frozen --group dev
 
       - name: Run test suite
-        run: uv run pytest -q
+        run: uv run pytest -q --ignore=src/tests/use_cases
+
+      - name: Run use case tests
+        run: uv run pytest -q src/tests/use_cases
