@@ -160,6 +160,23 @@ These compatibility paths still exist, but treat them as bridges:
 
 They are there to reduce migration pain, not to define the future architecture.
 
+## Outbox single-writer boundary (important)
+
+`publish_from_outbox()` now has a single-writer guard with these limits:
+
+- exclusivity is **per `MessageBus` instance**
+- protection is **process-local** only
+
+What that means in practice:
+
+- two concurrent publish calls on the same bus instance are serialized
+- two different bus instances may publish in parallel
+- two different OS processes are **not** coordinated by this guard
+
+For multi-process deployments, if you need global single-consumer semantics, add a
+distributed claiming strategy (for example DB row claiming/leases or external
+distributed locks). That is intentionally out of scope for this runtime guard.
+
 ## Recommended rollout plan for clients
 
 1. keep your public API facade stable

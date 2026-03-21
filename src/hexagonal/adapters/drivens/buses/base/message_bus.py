@@ -1,3 +1,4 @@
+import threading
 from abc import abstractmethod
 from typing import Any, Callable
 
@@ -24,6 +25,7 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
         self._outbox_repository_getter: (
             Callable[[Any], IOutboxRepository[TManager]] | None
         ) = None
+        self._outbox_publish_lock = threading.RLock()
         super().__init__()
 
     @property
@@ -53,12 +55,13 @@ class MessageBus(IBaseMessageBus[TManager], Infrastructure):
     # publish
     def publish_from_outbox(self, limit: int | None = None) -> None:
         self.verify()
-        self._run_with_outbox_repository(
-            lambda outbox_repository: self._publish_messages(
-                outbox_repository,
-                *outbox_repository.fetch_pending(limit=limit),
+        with self._outbox_publish_lock:
+            self._run_with_outbox_repository(
+                lambda outbox_repository: self._publish_messages(
+                    outbox_repository,
+                    *outbox_repository.fetch_pending(limit=limit),
+                )
             )
-        )
 
     def _run_with_outbox_repository(
         self,
