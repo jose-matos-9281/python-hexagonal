@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 from typing import Any, cast
 
@@ -340,6 +341,136 @@ def test_publish_from_outbox_without_scope_runtime_falls_back_to_root_repository
 
     assert published_ids == [message.message_id]
     assert root_usage == ["fetch", "mark"]
+
+
+def test_publish_from_outbox_nested_same_thread_is_reentrant_and_no_deadlock(
+    tmp_path: Path,
+):
+    _, app, api = bootstrap_example_stack(
+        tmp_path / "parallel-safe-scope-nested-publish.db",
+        {"ENV_BUS": "inmemory"},
+    )
+
+    contacto_api = api.contacto.contacto
+    created = contacto_api.crear(
+        TipoContacto.EMAIL.value,
+        "scope-nested-publish@example.com",
+    ).get(contacto_api.Events.CREADO.value)
+    message = CloudMessage[type(created)].new(created)
+
+    event_bus = cast(Any, app.event_bus)
+    event_bus.configure_scope_runtime()
+    root_outbox = event_bus.outbox_repository
+    publish_calls: list[object] = []
+    mark_calls: list[object] = []
+    fetch_calls: list[str] = []
+    nested_triggered = False
+
+    original_publish_message = event_bus._publish_message
+    original_fetch_pending = root_outbox.fetch_pending
+    original_mark_as_published = root_outbox.mark_as_published
+
+    def fetch_pending(*args: Any, **kwargs: Any):
+        fetch_calls.append("fetch")
+        if len(fetch_calls) == 1:
+            return [message]
+        return []
+
+    def mark_as_published(*message_ids: Any):
+        mark_calls.extend(message_ids)
+
+    def nested_publish_once(cloud_message: CloudMessage[Any]):
+        nonlocal nested_triggered
+        publish_calls.append(cloud_message.message_id)
+        if not nested_triggered:
+            nested_triggered = True
+            event_bus.publish_from_outbox(limit=1)
+
+    root_outbox.fetch_pending = fetch_pending
+    root_outbox.mark_as_published = mark_as_published
+    event_bus._publish_message = nested_publish_once
+
+    try:
+        event_bus.publish_from_outbox(limit=1)
+    finally:
+        root_outbox.fetch_pending = original_fetch_pending
+        root_outbox.mark_as_published = original_mark_as_published
+        event_bus._publish_message = original_publish_message
+
+    assert nested_triggered is True
+    assert fetch_calls == ["fetch", "fetch"]
+    assert publish_calls == [message.message_id]
+    assert mark_calls == [message.message_id]
+
+
+def test_publish_from_outbox_releases_lock_after_failure_for_retry_attempt(
+    tmp_path: Path,
+):
+    _, app, api = bootstrap_example_stack(
+        tmp_path / "parallel-safe-scope-publish-failure-retry.db",
+        {"ENV_BUS": "inmemory"},
+    )
+
+    contacto_api = api.contacto.contacto
+    created = contacto_api.crear(
+        TipoContacto.EMAIL.value,
+        "scope-publish-failure-retry@example.com",
+    ).get(contacto_api.Events.CREADO.value)
+    message = CloudMessage[type(created)].new(created)
+
+    event_bus = cast(Any, app.event_bus)
+    event_bus.configure_scope_runtime()
+    root_outbox = event_bus.outbox_repository
+    failure_errors: list[str] = []
+    published_ids: list[object] = []
+    publish_attempts = 0
+
+    original_publish_message = event_bus._publish_message
+    original_fetch_pending = root_outbox.fetch_pending
+    original_mark_as_failed = root_outbox.mark_as_failed
+    original_mark_as_published = root_outbox.mark_as_published
+
+    def fetch_pending(*args: Any, **kwargs: Any):
+        return [message]
+
+    def mark_as_failed(*message_ids: Any, error: str):
+        failure_errors.append(error)
+
+    def mark_as_published(*message_ids: Any):
+        published_ids.extend(message_ids)
+
+    def fail_then_succeed(cloud_message: CloudMessage[Any]):
+        nonlocal publish_attempts
+        publish_attempts += 1
+        if publish_attempts == 1:
+            raise RuntimeError("first-attempt-failure")
+
+    root_outbox.fetch_pending = fetch_pending
+    root_outbox.mark_as_failed = mark_as_failed
+    root_outbox.mark_as_published = mark_as_published
+    event_bus._publish_message = fail_then_succeed
+
+    retry_done = threading.Event()
+
+    def retry_publish() -> None:
+        event_bus.publish_from_outbox(limit=1)
+        retry_done.set()
+
+    try:
+        event_bus.publish_from_outbox(limit=1)
+        retry_thread = threading.Thread(target=retry_publish)
+        retry_thread.start()
+        retry_thread.join(timeout=2)
+    finally:
+        root_outbox.fetch_pending = original_fetch_pending
+        root_outbox.mark_as_failed = original_mark_as_failed
+        root_outbox.mark_as_published = original_mark_as_published
+        event_bus._publish_message = original_publish_message
+
+    assert retry_done.is_set()
+    assert publish_attempts == 2
+    assert failure_errors == ["first-attempt-failure"]
+    assert published_ids == [message.message_id]
 
 
 def test_read_scopes_create_fresh_managers_and_repositories(tmp_path: Path):
