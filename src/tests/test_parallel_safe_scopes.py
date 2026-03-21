@@ -1,8 +1,8 @@
+from pathlib import Path
 from typing import Any, cast
 
-from hexagonal.domain import CloudMessage
-
 from example.contacto.domain.shared import TipoContacto
+from hexagonal.domain import CloudMessage
 from tests.use_cases.base import (
     bootstrap_example_stack,
     count_inbox_rows,
@@ -11,7 +11,7 @@ from tests.use_cases.base import (
 
 
 def test_write_scopes_create_fresh_mutable_objects_and_reuse_cached_primitives(
-    tmp_path,
+    tmp_path: Path,
 ):
     _, app, _ = bootstrap_example_stack(
         tmp_path / "parallel-safe-scopes.db",
@@ -50,7 +50,7 @@ def test_write_scopes_create_fresh_mutable_objects_and_reuse_cached_primitives(
 
 
 def test_scoped_command_execution_publishes_without_leaking_pending_outbox_rows(
-    tmp_path,
+    tmp_path: Path,
 ):
     _, app, api = bootstrap_example_stack(
         tmp_path / "parallel-safe-scope-outbox.db",
@@ -69,7 +69,7 @@ def test_scoped_command_execution_publishes_without_leaking_pending_outbox_rows(
     assert count_inbox_rows(app, processed=True) - before_inbox_processed == 1
 
 
-def test_publish_from_outbox_uses_current_write_scope_outbox_repository(tmp_path):
+def test_publish_from_outbox_uses_current_write_scope_outbox_repository(tmp_path: Path):
     _, app, api = bootstrap_example_stack(
         tmp_path / "parallel-safe-scope-publish-routing.db",
         {"ENV_BUS": "inmemory"},
@@ -143,7 +143,7 @@ def test_publish_from_outbox_uses_current_write_scope_outbox_repository(tmp_path
 
 
 def test_publish_from_outbox_marks_failure_with_current_write_scope_outbox_repository(
-    tmp_path,
+    tmp_path: Path,
 ):
     _, app, api = bootstrap_example_stack(
         tmp_path / "parallel-safe-scope-publish-failure-routing.db",
@@ -216,7 +216,9 @@ def test_publish_from_outbox_marks_failure_with_current_write_scope_outbox_repos
     assert captured_errors == [f"boom:{message.message_id}"]
 
 
-def test_publish_from_outbox_without_active_scope_creates_fresh_write_scope(tmp_path):
+def test_publish_from_outbox_without_active_scope_creates_fresh_write_scope(
+    tmp_path: Path,
+):
     _, app, api = bootstrap_example_stack(
         tmp_path / "parallel-safe-scope-publish-fresh-scope.db",
         {"ENV_BUS": "inmemory"},
@@ -291,7 +293,7 @@ def test_publish_from_outbox_without_active_scope_creates_fresh_write_scope(tmp_
 
 
 def test_publish_from_outbox_without_scope_runtime_falls_back_to_root_repository(
-    tmp_path,
+    tmp_path: Path,
 ):
     _, app, api = bootstrap_example_stack(
         tmp_path / "parallel-safe-scope-publish-root-fallback.db",
@@ -315,14 +317,14 @@ def test_publish_from_outbox_without_scope_runtime_falls_back_to_root_repository
     original_root_fetch_pending = root_outbox.fetch_pending
     original_root_mark_as_published = root_outbox.mark_as_published
 
-    def publish_message_noop(cloud_message):
+    def publish_message_noop(cloud_message: CloudMessage[Any]):
         published_ids.append(cloud_message.message_id)
 
-    def root_fetch_pending(*args, **kwargs):
+    def root_fetch_pending(*args: Any, **kwargs: Any):
         root_usage.append("fetch")
         return [message]
 
-    def root_mark_as_published(*message_ids):
+    def root_mark_as_published(*message_ids: Any):
         root_usage.append("mark")
 
     event_bus._publish_message = publish_message_noop
@@ -340,7 +342,7 @@ def test_publish_from_outbox_without_scope_runtime_falls_back_to_root_repository
     assert root_usage == ["fetch", "mark"]
 
 
-def test_read_scopes_create_fresh_managers_and_repositories(tmp_path):
+def test_read_scopes_create_fresh_managers_and_repositories(tmp_path: Path):
     _, app, _ = bootstrap_example_stack(
         tmp_path / "parallel-safe-read-scopes.db",
         {"ENV_BUS": "inmemory"},
